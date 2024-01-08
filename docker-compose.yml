@@ -1,0 +1,226 @@
+version: '3.10'
+
+services:
+  milvus_etcd:
+    container_name: paimongpt_milvus_etcd
+    image: quay.io/coreos/etcd:v3.5.5
+    environment:
+      - ETCD_AUTO_COMPACTION_MODE=revision
+      - ETCD_AUTO_COMPACTION_RETENTION=1000
+      - ETCD_QUOTA_BACKEND_BYTES=4294967296
+      - ETCD_SNAPSHOT_COUNT=50000
+    volumes:
+      - ./DATA/milvus/etcd:/etcd
+    restart: unless-stopped
+    networks:
+      - paimongptnet
+    command: etcd -advertise-client-urls=http://127.0.0.1:2379 -listen-client-urls http://0.0.0.0:2379 --data-dir /etcd
+    healthcheck:
+      test: [ "CMD", "etcdctl", "endpoint", "health" ]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  milvus_minio:
+    container_name: paimongpt_milvus_minio
+    image: minio/minio:RELEASE.2023-03-20T20-16-18Z
+    environment:
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin
+    volumes:
+      - ./DATA/milvus/minio:/minio_data
+    restart: unless-stopped
+    networks:
+      - paimongptnet
+    command: minio server /minio_data --console-address ":9001"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  milvus:
+    container_name: paimongpt_milvus
+    image: milvusdb/milvus:v2.3.1
+    command: [ "milvus", "run", "standalone" ]
+    environment:
+      ETCD_ENDPOINTS: milvus_etcd:2379
+      MINIO_ADDRESS: milvus_minio:9000
+    volumes:
+      - ./DATA/milvus/milvus:/var/lib/milvus
+    restart: unless-stopped
+    networks:
+      - paimongptnet
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:9091/healthz" ]
+      interval: 30s
+      start_period: 90s
+      timeout: 20s
+      retries: 3
+    ports:
+      - "24610:19530"
+      - "24611:9091"
+    depends_on:
+      - milvus_etcd
+      - milvus_minio
+
+  db:
+    image: mysql
+    container_name: paimongpt_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: '666666'
+    volumes:
+      - ./DATA/mysql/data:/var/lib/mysql
+      - ./DATA/mysql/log:/var/log/mysql
+      - ./DATA/mysql/conf.d:/etc/mysql/conf.d
+      - ./assets/create_database.sql:/docker-entrypoint-initdb.d/create_database.sql
+    restart: unless-stopped
+    networks:
+      - paimongptnet
+
+  ocr_center:
+    container_name: paimongpt_ocr_center
+    image: registry.cn-beijing.aliyuncs.com/yuemengrui/ocr_center:v4-0.6
+    command: [ "/bin/bash", "-c", "/root/workspace/OCR_Center/ai_server/docker_run.sh" ]
+    ports:
+      - "24666:24666"
+    restart: unless-stopped
+    networks:
+      - paimongptnet
+    shm_size: "1gb"
+    stdin_open: true
+    tty: true
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: [ "0" ]
+              capabilities: [ gpu ]
+
+
+  tokenizer_server:
+    container_name: paimongpt_tokenizer_server
+    image: registry.cn-beijing.aliyuncs.com/yuemengrui/ai:pytorch2.0.1-cuda11.8-cudnn8-ubuntu20.04-py311-node18.18
+    command: [ "/bin/bash", "-c", "/workspace/AI_Tokenizer_Server/docker_run.sh" ]
+    volumes:
+      - ./AI_Tokenizer_Server/AI_Tokenizer_Server:/workspace/AI_Tokenizer_Server
+      - ./DATA/Models:/workspace/Models
+    ports:
+      - "24612:24612"
+    restart: unless-stopped
+    networks:
+      - paimongptnet
+    shm_size: "4gb"
+    stdin_open: true
+    tty: true
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: [ "0" ]
+              capabilities: [ gpu ]
+
+
+  tools_server:
+    container_name: paimongpt_tools_server
+    image: registry.cn-beijing.aliyuncs.com/yuemengrui/ai:pytorch2.0.1-cuda11.8-cudnn8-ubuntu20.04-py311-node18.18
+    command: [ "/bin/bash", "-c", "/workspace/AI_Tools_Servers/docker_run.sh" ]
+    volumes:
+      - ./AI_Tools_Servers/AI_Tools_Servers:/workspace/AI_Tools_Servers
+      - ./DATA/Models:/workspace/Models
+    ports:
+      - "24614:24614"
+    restart: unless-stopped
+    networks:
+      - paimongptnet
+    shm_size: "1gb"
+    stdin_open: true
+    tty: true
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: [ "0" ]
+              capabilities: [ gpu ]
+
+
+  paimongpt_server:
+    container_name: paimongpt_server
+    image: registry.cn-beijing.aliyuncs.com/yuemengrui/ai:pytorch2.0.1-cuda11.8-cudnn8-ubuntu20.04-py311-node18.18
+    command: [ "/bin/bash", "-c", "/workspace/PaimonGPT/docker_run.sh" ]
+    depends_on:
+      - db
+      - milvus
+    volumes:
+      - ./PaimonGPT:/workspace/PaimonGPT
+    ports:
+      - "24600:24600"
+      - "24601:24601"
+    # webserver may be failed, it must wait all sqls in /docker-entrypoint-initdb.d execute finish.
+    restart: unless-stopped
+    networks:
+      - paimongptnet
+    stdin_open: true
+    tty: true
+
+
+  embedding_server:
+    container_name: paimongpt_embedding_server
+    image: registry.cn-beijing.aliyuncs.com/yuemengrui/ai:pytorch2.0.1-cuda11.8-cudnn8-ubuntu20.04-py311-node18.18
+    command: [ "/bin/bash", "-c", "/workspace/Embedding_Server/docker_run.sh" ]
+    depends_on:
+      - paimongpt_server
+    volumes:
+      - ./Embedding_Server/Embedding_Server:/workspace/Embedding_Server
+      - ./DATA/Models:/workspace/Models
+    ports:
+      - "24613:24613"
+    restart: unless-stopped
+    networks:
+      - paimongptnet
+    shm_size: "2gb"
+    stdin_open: true
+    tty: true
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: [ "0" ]
+              capabilities: [ gpu ]
+
+  baichuan_server:
+    container_name: paimongpt_baichuan_server
+    image: registry.cn-beijing.aliyuncs.com/yuemengrui/ai:pytorch2.0.1-cuda11.8-cudnn8-ubuntu20.04-py311-node18.18
+    command: [ "/bin/bash", "-c", "/workspace/LLM_Server_Baichuan/docker_run.sh" ]
+    depends_on:
+      - paimongpt_server
+    volumes:
+      - ./LLM_Server_Baichuan/LLM_Server_Baichuan:/workspace/LLM_Server_Baichuan
+      - ./DATA/Models:/workspace/Models
+    ports:
+      - "24620:24620"
+    restart: unless-stopped
+    networks:
+      - paimongptnet
+    shm_size: "4gb"
+    stdin_open: true
+    tty: true
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: [ "1" ]
+              capabilities: [ gpu ]
+
+
+
+
+networks:
+  paimongptnet:
+    driver: bridge
+    name: paimongptnet
