@@ -4,6 +4,7 @@ SYSTEM_APP_LIST = ['tableQA', '图文理解']
 ########################
 # API LIMIT Configs
 API_LIMIT = {
+    "base": "120/minute",
     "auth": "120/minute",
     "model_list": "120/minute",
     "chat": "15/minute",

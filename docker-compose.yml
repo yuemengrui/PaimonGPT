@@ -16,9 +16,9 @@ services:
       - paimongptnet
     healthcheck:
       test: [ "CMD", "mysqladmin" ,"ping", "-uroot", "-p666666" ]
-      interval: 30s
+      interval: 60s
       timeout: 10s
-      retries: 3
+      retries: 5
 
 
   etcd:
@@ -37,9 +37,9 @@ services:
     command: etcd -advertise-client-urls=http://127.0.0.1:2379 -listen-client-urls http://0.0.0.0:2379 --data-dir /etcd
     healthcheck:
       test: [ "CMD", "etcdctl", "endpoint", "health" ]
-      interval: 30s
+      interval: 60s
       timeout: 20s
-      retries: 3
+      retries: 5
 
 
   minio:
@@ -56,9 +56,9 @@ services:
     command: minio server /minio_data --console-address ":9001"
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
-      interval: 30s
+      interval: 60s
       timeout: 20s
-      retries: 3
+      retries: 5
 
 
   milvus:
@@ -75,15 +75,14 @@ services:
       - paimongptnet
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:9091/healthz" ]
-      interval: 30s
+      interval: 60s
       start_period: 90s
       timeout: 20s
-      retries: 3
+      retries: 5
     ports:
       - "24610:19530"
       - "24611:9091"
     depends_on:
-      - db
       - etcd
       - minio
 
@@ -160,12 +159,15 @@ services:
   paimongpt_server:
     container_name: paimongpt_server
     image: registry.cn-beijing.aliyuncs.com/yuemengrui/ai:pytorch2.0.1-cuda11.8-cudnn8-ubuntu20.04-py311-node18.18
-    command: [ "/workspace/wait-for-it.sh", "-t", "0", "--strict", "paimongpt_milvus:19530", "--","/bin/bash", "-c", "/workspace/PaimonGPT/docker_run.sh" ]
+    command: [ "/bin/bash", "-c", "/workspace/PaimonGPT/docker_run.sh" ]
     depends_on:
-      - db
-      - milvus
+      db:
+        condition: service_healthy
+        restart: true
+      milvus:
+        condition: service_healthy
+        restart: true
     volumes:
-      - ./wait-for-it.sh:/workspace/wait-for-it.sh
       - ./PaimonGPT:/workspace/PaimonGPT
     ports:
       - "24600:24600"
@@ -175,16 +177,23 @@ services:
       - paimongptnet
     stdin_open: true
     tty: true
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:24601/ai/health" ]
+      interval: 60s
+      start_period: 60s
+      timeout: 10s
+      retries: 5
 
 
   embedding_server:
     container_name: paimongpt_embedding_server
     image: registry.cn-beijing.aliyuncs.com/yuemengrui/ai:pytorch2.0.1-cuda11.8-cudnn8-ubuntu20.04-py311-node18.18
-    command: [ "/workspace/wait-for-it.sh", "-t", "0", "--strict", "paimongpt_server:24601", "--", "/bin/bash", "-c", "/workspace/Embedding_Server/docker_run.sh" ]
+    command: [ "/bin/bash", "-c", "/workspace/Embedding_Server/docker_run.sh" ]
     depends_on:
-      - paimongpt_server
+      paimongpt_server:
+        condition: service_healthy
+        restart: true
     volumes:
-      - ./wait-for-it.sh:/workspace/wait-for-it.sh
       - ./Embedding_Server/Embedding_Server:/workspace/Embedding_Server
       - ./DATA/Models:/workspace/Models
     ports:
@@ -206,12 +215,12 @@ services:
   baichuan_server:
     container_name: paimongpt_baichuan_server
     image: registry.cn-beijing.aliyuncs.com/yuemengrui/ai:pytorch2.0.1-cuda11.8-cudnn8-ubuntu20.04-py311-node18.18
-    command: [ "/workspace/wait-for-it.sh", "-t", "0", "--strict", "paimongpt_server:24601", "--", "/bin/bash", "-c", "/workspace/LLM_Server_Baichuan/docker_run.sh" ]
+    command: [ "/bin/bash", "-c", "/workspace/LLM_Server_Baichuan/docker_run.sh" ]
     depends_on:
-      - embedding_server
-      - paimongpt_server
+      paimongpt_server:
+        condition: service_healthy
+        restart: true
     volumes:
-      - ./wait-for-it.sh:/workspace/wait-for-it.sh
       - ./LLM_Server_Baichuan/LLM_Server_Baichuan:/workspace/LLM_Server_Baichuan
       - ./DATA/Models:/workspace/Models
     ports:
