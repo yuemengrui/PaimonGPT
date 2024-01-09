@@ -11,7 +11,7 @@ MYSQL_DATABASE_NAME = 'paimongpt'
 
 ########################
 # Milvus Configs
-MILVUS_HOST = 'paimongpt_mysql'
+MILVUS_HOST = 'paimongpt_milvus'
 MILVUS_PORT = 19530
 MILVUS_DB_NAME = 'paimongpt'
 MILVUS_USERNAME = ''
