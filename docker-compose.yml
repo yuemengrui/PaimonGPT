@@ -99,6 +99,12 @@ services:
     shm_size: "1gb"
     stdin_open: true
     tty: true
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:24666/ai/ocr/test" ]
+      interval: 5m
+      start_period: 120s
+      timeout: 20s
+      retries: 5
     deploy:
       resources:
         reservations:
@@ -123,6 +129,12 @@ services:
     shm_size: "4gb"
     stdin_open: true
     tty: true
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:24612/ai/health" ]
+      interval: 60s
+      start_period: 120s
+      timeout: 10s
+      retries: 5
     deploy:
       resources:
         reservations:
@@ -147,6 +159,12 @@ services:
     shm_size: "1gb"
     stdin_open: true
     tty: true
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:24614/ai/health" ]
+      interval: 60s
+      start_period: 120s
+      timeout: 10s
+      retries: 5
     deploy:
       resources:
         reservations:
@@ -204,6 +222,12 @@ services:
     shm_size: "2gb"
     stdin_open: true
     tty: true
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:24613/ai/health" ]
+      interval: 60s
+      start_period: 120s
+      timeout: 10s
+      retries: 5
     deploy:
       resources:
         reservations:
@@ -231,6 +255,12 @@ services:
     shm_size: "4gb"
     stdin_open: true
     tty: true
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:24620/ai/health" ]
+      interval: 60s
+      start_period: 120s
+      timeout: 10s
+      retries: 5
     deploy:
       resources:
         reservations:
