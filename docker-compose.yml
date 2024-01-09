@@ -20,6 +20,7 @@ services:
       timeout: 10s
       retries: 3
 
+
   etcd:
     container_name: paimongpt_milvus_etcd
     image: quay.io/coreos/etcd:v3.5.5
@@ -39,8 +40,7 @@ services:
       interval: 30s
       timeout: 20s
       retries: 3
-    depends_on:
-      - db
+
 
   minio:
     container_name: paimongpt_milvus_minio
@@ -59,8 +59,7 @@ services:
       interval: 30s
       timeout: 20s
       retries: 3
-    depends_on:
-      - etcd
+
 
   milvus:
     container_name: paimongpt_milvus
@@ -84,8 +83,10 @@ services:
       - "24610:19530"
       - "24611:9091"
     depends_on:
+      - db
       - etcd
       - minio
+
 
   ocr_center:
     container_name: paimongpt_ocr_center
@@ -99,8 +100,6 @@ services:
     shm_size: "1gb"
     stdin_open: true
     tty: true
-    depends_on:
-      - milvus
     deploy:
       resources:
         reservations:
@@ -108,26 +107,6 @@ services:
             - driver: nvidia
               device_ids: [ "0" ]
               capabilities: [ gpu ]
-
-  paimongpt_server:
-    container_name: paimongpt_server
-    image: registry.cn-beijing.aliyuncs.com/yuemengrui/ai:pytorch2.0.1-cuda11.8-cudnn8-ubuntu20.04-py311-node18.18
-    command: [ "/bin/bash", "-c", "/workspace/PaimonGPT/docker_run.sh" ]
-    depends_on:
-      - db
-      - milvus
-      - ocr_center
-    volumes:
-      - ./PaimonGPT:/workspace/PaimonGPT
-    ports:
-      - "24600:24600"
-      - "24601:24601"
-    # webserver may be failed, it must wait all sqls in /docker-entrypoint-initdb.d execute finish.
-    restart: unless-stopped
-    networks:
-      - paimongptnet
-    stdin_open: true
-    tty: true
 
 
   tokenizer_server:
@@ -145,8 +124,6 @@ services:
     shm_size: "4gb"
     stdin_open: true
     tty: true
-    depends_on:
-      - paimongpt_server
     deploy:
       resources:
         reservations:
@@ -171,8 +148,6 @@ services:
     shm_size: "1gb"
     stdin_open: true
     tty: true
-    depends_on:
-      - tokenizer_server
     deploy:
       resources:
         reservations:
@@ -182,14 +157,34 @@ services:
               capabilities: [ gpu ]
 
 
+  paimongpt_server:
+    container_name: paimongpt_server
+    image: registry.cn-beijing.aliyuncs.com/yuemengrui/ai:pytorch2.0.1-cuda11.8-cudnn8-ubuntu20.04-py311-node18.18
+    command: [ "/workspace/wait-for-it.sh", "-t", "0", "--strict", "paimongpt_milvus:19530", "--","/bin/bash", "-c", "/workspace/PaimonGPT/docker_run.sh" ]
+    depends_on:
+      - db
+      - milvus
+    volumes:
+      - ./wait-for-it.sh:/workspace/wait-for-it.sh
+      - ./PaimonGPT:/workspace/PaimonGPT
+    ports:
+      - "24600:24600"
+      - "24601:24601"
+    restart: unless-stopped
+    networks:
+      - paimongptnet
+    stdin_open: true
+    tty: true
+
+
   embedding_server:
     container_name: paimongpt_embedding_server
     image: registry.cn-beijing.aliyuncs.com/yuemengrui/ai:pytorch2.0.1-cuda11.8-cudnn8-ubuntu20.04-py311-node18.18
-    command: [ "/bin/bash", "-c", "/workspace/Embedding_Server/docker_run.sh" ]
+    command: [ "/workspace/wait-for-it.sh", "-t", "0", "--strict", "paimongpt_server:24601", "--", "/bin/bash", "-c", "/workspace/Embedding_Server/docker_run.sh" ]
     depends_on:
-      - tools_server
       - paimongpt_server
     volumes:
+      - ./wait-for-it.sh:/workspace/wait-for-it.sh
       - ./Embedding_Server/Embedding_Server:/workspace/Embedding_Server
       - ./DATA/Models:/workspace/Models
     ports:
@@ -211,11 +206,12 @@ services:
   baichuan_server:
     container_name: paimongpt_baichuan_server
     image: registry.cn-beijing.aliyuncs.com/yuemengrui/ai:pytorch2.0.1-cuda11.8-cudnn8-ubuntu20.04-py311-node18.18
-    command: [ "/bin/bash", "-c", "/workspace/LLM_Server_Baichuan/docker_run.sh" ]
+    command: [ "/workspace/wait-for-it.sh", "-t", "0", "--strict", "paimongpt_server:24601", "--", "/bin/bash", "-c", "/workspace/LLM_Server_Baichuan/docker_run.sh" ]
     depends_on:
       - embedding_server
       - paimongpt_server
     volumes:
+      - ./wait-for-it.sh:/workspace/wait-for-it.sh
       - ./LLM_Server_Baichuan/LLM_Server_Baichuan:/workspace/LLM_Server_Baichuan
       - ./DATA/Models:/workspace/Models
     ports:
