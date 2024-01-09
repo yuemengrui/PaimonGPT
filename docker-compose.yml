@@ -39,6 +39,8 @@ services:
       interval: 30s
       timeout: 20s
       retries: 3
+    depends_on:
+      - db
 
   minio:
     container_name: paimongpt_milvus_minio
@@ -57,6 +59,8 @@ services:
       interval: 30s
       timeout: 20s
       retries: 3
+    depends_on:
+      - etcd
 
   milvus:
     container_name: paimongpt_milvus
@@ -80,7 +84,6 @@ services:
       - "24610:19530"
       - "24611:9091"
     depends_on:
-      - db
       - etcd
       - minio
 
@@ -169,7 +172,7 @@ services:
     stdin_open: true
     tty: true
     depends_on:
-      - paimongpt_server
+      - tokenizer_server
     deploy:
       resources:
         reservations:
@@ -184,6 +187,7 @@ services:
     image: registry.cn-beijing.aliyuncs.com/yuemengrui/ai:pytorch2.0.1-cuda11.8-cudnn8-ubuntu20.04-py311-node18.18
     command: [ "/bin/bash", "-c", "/workspace/Embedding_Server/docker_run.sh" ]
     depends_on:
+      - tools_server
       - paimongpt_server
     volumes:
       - ./Embedding_Server/Embedding_Server:/workspace/Embedding_Server
@@ -209,6 +213,7 @@ services:
     image: registry.cn-beijing.aliyuncs.com/yuemengrui/ai:pytorch2.0.1-cuda11.8-cudnn8-ubuntu20.04-py311-node18.18
     command: [ "/bin/bash", "-c", "/workspace/LLM_Server_Baichuan/docker_run.sh" ]
     depends_on:
+      - embedding_server
       - paimongpt_server
     volumes:
       - ./LLM_Server_Baichuan/LLM_Server_Baichuan:/workspace/LLM_Server_Baichuan
