@@ -116,7 +116,7 @@ services:
 
   tokenizer_server:
     container_name: paimongpt_tokenizer_server
-    image: registry.cn-beijing.aliyuncs.com/yuemengrui/ai:pytorch2.0.1-cuda11.8-cudnn8-ubuntu20.04-py311-node18.18
+    image: registry.cn-beijing.aliyuncs.com/yuemengrui/ai:pytorch2.0.1-cuda11.8-cudnn8-ubuntu20.04-py311-v0.1
     command: [ "/bin/bash", "-c", "/workspace/AI_Tokenizer_Server/docker_run.sh" ]
     volumes:
       - ./AI_Tokenizer_Server/AI_Tokenizer_Server:/workspace/AI_Tokenizer_Server
@@ -132,7 +132,7 @@ services:
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:24612/ai/health" ]
       interval: 60s
-      start_period: 120s
+      start_period: 5m
       timeout: 10s
       retries: 5
     deploy:
@@ -146,7 +146,7 @@ services:
 
   tools_server:
     container_name: paimongpt_tools_server
-    image: registry.cn-beijing.aliyuncs.com/yuemengrui/ai:pytorch2.0.1-cuda11.8-cudnn8-ubuntu20.04-py311-node18.18
+    image: registry.cn-beijing.aliyuncs.com/yuemengrui/ai:pytorch2.0.1-cuda11.8-cudnn8-ubuntu20.04-py311-v0.1
     command: [ "/bin/bash", "-c", "/workspace/AI_Tools_Servers/docker_run.sh" ]
     volumes:
       - ./AI_Tools_Servers/AI_Tools_Servers:/workspace/AI_Tools_Servers
@@ -176,7 +176,7 @@ services:
 
   paimongpt_server:
     container_name: paimongpt_server
-    image: registry.cn-beijing.aliyuncs.com/yuemengrui/ai:pytorch2.0.1-cuda11.8-cudnn8-ubuntu20.04-py311-node18.18
+    image: registry.cn-beijing.aliyuncs.com/yuemengrui/ai:pytorch2.0.1-cuda11.8-cudnn8-ubuntu20.04-py311-v0.1
     command: [ "/bin/bash", "-c", "/workspace/PaimonGPT/docker_run.sh" ]
     depends_on:
       db:
@@ -205,7 +205,7 @@ services:
 
   embedding_server:
     container_name: paimongpt_embedding_server
-    image: registry.cn-beijing.aliyuncs.com/yuemengrui/ai:pytorch2.0.1-cuda11.8-cudnn8-ubuntu20.04-py311-node18.18
+    image: registry.cn-beijing.aliyuncs.com/yuemengrui/ai:pytorch2.0.1-cuda11.8-cudnn8-ubuntu20.04-py311-v0.1
     command: [ "/bin/bash", "-c", "/workspace/Embedding_Server/docker_run.sh" ]
     depends_on:
       paimongpt_server:
@@ -238,7 +238,7 @@ services:
 
   baichuan_server:
     container_name: paimongpt_baichuan_server
-    image: registry.cn-beijing.aliyuncs.com/yuemengrui/ai:pytorch2.0.1-cuda11.8-cudnn8-ubuntu20.04-py311-node18.18
+    image: registry.cn-beijing.aliyuncs.com/yuemengrui/ai:pytorch2.0.1-cuda11.8-cudnn8-ubuntu20.04-py311-v0.1
     command: [ "/bin/bash", "-c", "/workspace/LLM_Server_Baichuan/docker_run.sh" ]
     depends_on:
       paimongpt_server:
