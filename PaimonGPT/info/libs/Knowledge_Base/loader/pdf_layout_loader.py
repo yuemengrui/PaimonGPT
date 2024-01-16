@@ -8,6 +8,7 @@ import numpy as np
 from typing import List
 from copy import deepcopy
 from mylogger import logger
+from info import Embedding_Models
 from configs import API_TABLE_ANALYSIS, API_OCR_GENERAL, API_LAYOUT_ANALYSIS, EMBEDDING_SERVER_APIS
 
 
@@ -47,7 +48,7 @@ class PDFLayoutLoader:
     def embedding_token_count(self, sentences: List, embedding_model: str):
 
         try:
-            res = requests.post(url=EMBEDDING_SERVER_APIS['embedding_token_count'],
+            res = requests.post(url=Embedding_Models[embedding_model]['url_prefix'] + EMBEDDING_SERVER_APIS['embedding_token_count'],
                                 json={'model_name': embedding_model, 'sentences': sentences})
             return res.json()['token_counts'], res.json()['max_seq_length']
         except Exception as e:

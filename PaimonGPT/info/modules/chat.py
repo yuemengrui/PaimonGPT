@@ -65,7 +65,8 @@ def llm_chat(request: Request,
     }
     if req.stream:
         req_data.update({"stream": True})
-        resp = requests.post(url=LLM_SERVER_APIS['chat'], json=req_data, stream=True)
+        resp = requests.post(url=LLM_Models[req.model_name]['url_prefix'] + LLM_SERVER_APIS['chat'], json=req_data,
+                             stream=True)
         if 'event-stream' in resp.headers.get('content-type'):
             def stream_generate():
                 for line in resp.iter_content(chunk_size=None):
@@ -101,7 +102,8 @@ def llm_chat(request: Request,
             return JSONResponse(resp.json())
 
     else:
-        resp = requests.post(url=LLM_SERVER_APIS['chat'], json=req_data).json()
+        resp = requests.post(url=LLM_Models[req.model_name]['url_prefix'] + LLM_SERVER_APIS['chat'],
+                             json=req_data).json()
         resp['time_cost'].update({'total': f"{time.time() - start:.3f}s"})
         retrieval = {}
         retrieval.update({'sources': related_docs})
@@ -158,7 +160,8 @@ def llm_chat_simple(request: Request,
     }
     if req.stream:
         req_data.update({"stream": True})
-        resp = requests.post(url=LLM_SERVER_APIS['chat'], json=req_data, stream=True)
+        resp = requests.post(url=LLM_Models[req.model_name]['url_prefix'] + LLM_SERVER_APIS['chat'], json=req_data,
+                             stream=True)
         if 'event-stream' in resp.headers.get('content-type'):
             def stream_generate():
                 for line in resp.iter_content(chunk_size=None):
@@ -171,7 +174,8 @@ def llm_chat_simple(request: Request,
             return JSONResponse(resp.json())
 
     else:
-        resp = requests.post(url=LLM_SERVER_APIS['chat'], json=req_data).json()
+        resp = requests.post(url=LLM_Models[req.model_name]['url_prefix'] + LLM_SERVER_APIS['chat'],
+                             json=req_data).json()
         resp['time_cost'].update({'total': f"{time.time() - start:.3f}s"})
 
         return JSONResponse(resp)
