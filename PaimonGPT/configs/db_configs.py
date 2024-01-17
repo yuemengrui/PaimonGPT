@@ -17,3 +17,13 @@ MILVUS_DB_NAME = 'paimongpt'
 MILVUS_USERNAME = ''
 MILVUS_PASSWORD = ''
 ########################
+
+DBQA_PRESETS = {
+    'paimongpt': {
+        'host': MYSQL_HOST,
+        'port': MYSQL_POST,
+        'username': MYSQL_USERNAME,
+        'password': MYSQL_PASSWORD,
+        'db_name': 'paimongpt'
+    }
+}

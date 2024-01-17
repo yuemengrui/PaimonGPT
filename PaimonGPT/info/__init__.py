@@ -26,6 +26,8 @@ milvus_db = MilvusDB(logger=logger)
 LLM_Models = {}
 Embedding_Models = {}
 
+DBs = {}
+
 
 async def get_mysql_db():
     try:

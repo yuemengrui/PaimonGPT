@@ -1,7 +1,7 @@
 # *_*coding:utf-8 *_*
 # @Author : YueMengRui
 from pydantic import BaseModel, Field
-from typing import Dict, List, Literal
+from typing import Dict, List, Literal, Union
 
 
 class ErrorResponse(BaseModel):
@@ -187,3 +187,20 @@ class TableAnalysisRequest(BaseModel):
     uid: str
     file_hash: str
     file_url: str
+
+
+class DBConnectRequest(BaseModel):
+    preset: str = Field(default=None, description='预设的db name')
+    host: str = Field(default=None, description='DB host')
+    post: Union[int, str] = Field(default=3306, description='DB port')
+    username: str = Field(default=None, description='DB username')
+    password: str = Field(default=None, description='DB password')
+    db_name: str = Field(default=None, description='DB name')
+
+
+class DBChatRequest(BaseModel):
+    db_name: str = Field(description='DB name')
+    model_name: str = Field(description="模型名称")
+    prompt: str
+    history: List = Field(default=[], description="历史记录")
+    generation_configs: Dict = {}
