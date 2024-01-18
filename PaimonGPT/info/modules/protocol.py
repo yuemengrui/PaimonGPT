@@ -192,7 +192,7 @@ class TableAnalysisRequest(BaseModel):
 class DBConnectRequest(BaseModel):
     preset: str = Field(default=None, description='预设的db name')
     host: str = Field(default=None, description='DB host')
-    post: Union[int, str] = Field(default=3306, description='DB port')
+    port: Union[int, str] = Field(default=3306, description='DB port')
     username: str = Field(default=None, description='DB username')
     password: str = Field(default=None, description='DB password')
     db_name: str = Field(default=None, description='DB name')
