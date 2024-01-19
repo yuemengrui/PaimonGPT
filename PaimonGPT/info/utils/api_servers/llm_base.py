@@ -18,7 +18,7 @@ def servers_llm_chat(prompt, model_name, history: list = [], generation_configs:
     try:
         return resp.json()['answer']
     except Exception as e:
-        logger.info(resp.text, e)
+        logger.error(resp.text, e)
         return None
 
 

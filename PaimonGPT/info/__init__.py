@@ -6,9 +6,8 @@ from starlette.middleware.cors import CORSMiddleware
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from .db_mysql import SessionLocal, engine
-from .mysql_models import Base, SystemApp
+from .mysql_models import Base
 from .db_milvus import MilvusDB
-from configs import SYSTEM_APP_LIST
 from fastapi.openapi.docs import (
     get_redoc_html,
     get_swagger_ui_html,
@@ -89,17 +88,3 @@ def app_registry(app):
     from info.modules import register_router
 
     register_router(app)
-
-    mysql_db = SessionLocal()
-    for sys_app in SYSTEM_APP_LIST:
-        res = mysql_db.query(SystemApp).filter(SystemApp.name == sys_app).first()
-        if res is None:
-            new_sys_app = SystemApp()
-            new_sys_app.name = sys_app
-            mysql_db.add(new_sys_app)
-
-    try:
-        mysql_db.commit()
-    except Exception as e:
-        logger.error({'DB ERROR': e})
-        mysql_db.rollback()

@@ -1,7 +1,7 @@
 # *_*coding:utf-8 *_*
 # @Author : YueMengRui
 import datetime
-from sqlalchemy import Boolean, Column, Integer, String, DateTime, TEXT, JSON
+from sqlalchemy import Boolean, Column, Integer, String, DateTime, TEXT, JSON, BIGINT
 from .db_mysql import Base
 
 
@@ -40,50 +40,58 @@ class User(Base, BaseModel):
     password = Column(String(256), nullable=False)
 
 
-class SystemApp(Base, BaseModel):
-    __tablename__ = 'system_app'
+class AppStore(Base, BaseModel):
+    __tablename__ = 'app_store'
     id = Column(Integer, primary_key=True)
-    name = Column(String(32), nullable=False)
-    is_delete = Column(Boolean, default=False)
+    uid = Column(BIGINT, nullable=False, unique=True)
+    name = Column(String(16), nullable=False)
+    description = Column(String(256))
+    module_name = Column(String(64), nullable=False)
+    is_installed = Column(Boolean, default=True, comment="是否已上架，0:已下架，1:已上架")
 
     def to_dict(self):
         return {
-            "id": self.id,
-            "name": self.name
+            "id": self.uid,
+            "name": self.name,
+            "description": self.description
         }
 
 
 class App(Base, BaseModel):
     __tablename__ = 'app'
     id = Column(Integer, primary_key=True)
+    uid = Column(BIGINT, nullable=False, unique=True)
     user_id = Column(Integer, nullable=False)
     name = Column(String(32), nullable=False)
     llm_name = Column(String(32))
-    is_system = Column(Boolean, default=False, comment='是否是系统应用')
-    system_app_id = Column(Integer, comment='系统应用id')
+    description = Column(String(256))
+    is_store = Column(Boolean, default=False, comment='是否是商城应用')
+    store_app_uid = Column(BIGINT, comment='商城应用uid')
     is_delete = Column(Boolean, default=False)
 
     def to_dict(self):
         return {
-            "id": self.id,
+            "id": self.uid,
             "name": self.name,
             "llm_name": self.llm_name,
-            "is_system": self.is_system
+            "description": self.description,
+            "is_store": self.is_store,
+            "store_app_uid": self.store_app_uid
         }
 
 
 class App_KB(Base, BaseModel):
     __tablename__ = 'app_kb'
     id = Column(Integer, primary_key=True)
-    app_id = Column(Integer, nullable=False)
-    kb_id = Column(Integer, nullable=False)
+    app_id = Column(BIGINT, nullable=False)
+    kb_id = Column(BIGINT, nullable=False)
     kb_name = Column(String(32), nullable=False)
 
 
 class ChatRecord(Base, BaseModel):
     __tablename__ = 'chat_record'
     id = Column(Integer, primary_key=True)
-    app_id = Column(Integer, nullable=False)
+    app_id = Column(BIGINT, nullable=False)
     name = Column(String(16))
     dynamic_name = Column(String(16))
     is_delete = Column(Boolean, default=False)
@@ -134,23 +142,26 @@ class MultiQueryRetriever(Base, BaseModel):
 class KB(Base, BaseModel):
     __tablename__ = 'kb'
     id = Column(Integer, primary_key=True)
+    uid = Column(BIGINT, nullable=False, unique=True)
     user_id = Column(Integer, nullable=False)
     name = Column(String(32), nullable=False)
+    description = Column(String(256))
     embedding_model = Column(String(32), nullable=False)
     is_delete = Column(Boolean, default=False)
 
     def to_dict(self):
         return {
-            "id": self.id,
+            "id": self.uid,
             "name": self.name,
-            "embedding_model": self.embedding_model
+            "embedding_model": self.embedding_model,
+            "description": self.description
         }
 
 
 class KBFile(Base, BaseModel):
     __tablename__ = 'kb_file'
     id = Column(Integer, primary_key=True)
-    kb_id = Column(Integer, nullable=False)
+    kb_id = Column(BIGINT, nullable=False)
     method_id = Column(Integer, nullable=False, comment='1:自动分段，2:QA拆分， 3:json导入')
     file_name = Column(String(128), nullable=False)
     file_hash = Column(String(64), nullable=False)

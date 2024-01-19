@@ -133,7 +133,7 @@ def auto_chunk(req, mysql_db, embedding_model):
 
 def import_data_2_kb(req, mysql_db):
     logger.info('background task import data start......')
-    kb = mysql_db.query(KB).get(req.kb_id)
+    kb = mysql_db.query(KB).filter(KB.uid == req.kb_id).first()
     if kb:
         if req.method_id == 1:
             auto_chunk(req, mysql_db, kb.embedding_model)

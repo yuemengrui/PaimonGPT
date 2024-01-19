@@ -101,6 +101,16 @@ class TokenCountRequest(BaseModel):
     prompt: str
 
 
+class AppStoreAppInstallRequest(BaseModel):
+    name: str
+    description: str = Field(default='')
+    module_name: str
+
+
+class AppStoreAppUninstallRequest(BaseModel):
+    app_id: int
+
+
 class AppInfoRequest(BaseModel):
     app_id: int
 
@@ -118,8 +128,8 @@ class AppCreateRequest(BaseModel):
     kbs: List = Field(default=[])
 
 
-class AppCreateSystemAppRequest(BaseModel):
-    system_app_id: int
+class AppCreateFromAppStoreRequest(BaseModel):
+    app_id: int
 
 
 class AppDeleteRequest(BaseModel):
@@ -147,6 +157,7 @@ class AppChatMessageListRequest(BaseModel):
 
 class KBCreateRequest(BaseModel):
     name: str
+    description: str = Field(default='')
     embedding_model: str
 
 

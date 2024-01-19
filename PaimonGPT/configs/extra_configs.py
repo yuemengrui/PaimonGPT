@@ -1,6 +1,5 @@
 # *_*coding:utf-8 *_*
 # @Author : YueMengRui
-SYSTEM_APP_LIST = ['tableQA', '图文理解']
 ########################
 # API LIMIT Configs
 API_LIMIT = {
