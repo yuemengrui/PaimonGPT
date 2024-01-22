@@ -209,6 +209,17 @@ class DBConnectRequest(BaseModel):
     db_name: str = Field(default=None, description='DB name')
 
 
+class DBDisconnectRequest(BaseModel):
+    db_name: str
+
+
+class DBTableDataQueryRequest(BaseModel):
+    db_name: str = Field(description='DB name')
+    table_name: str = Field(description='表名')
+    page: int = Field(default=1)
+    page_size: int = Field(default=20)
+
+
 class DBChatRequest(BaseModel):
     db_name: str = Field(description='DB name')
     model_name: str = Field(description="模型名称")

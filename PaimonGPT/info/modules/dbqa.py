@@ -1,11 +1,12 @@
 # *_*coding:utf-8 *_*
 # @Author : YueMengRui
+import datetime
 from fastapi import APIRouter, Request, Depends
 from info.utils.Authentication import verify_token
 from info import logger, limiter, DBs
 from configs import API_LIMIT, DBQA_PRESETS
 from configs.prompt_template import DBQA_PROMPT_TEMPLATE
-from .protocol import DBConnectRequest, ErrorResponse, DBChatRequest
+from .protocol import DBConnectRequest, ErrorResponse, DBChatRequest, DBTableDataQueryRequest, DBDisconnectRequest
 from fastapi.responses import JSONResponse
 from info.utils.response_code import RET, error_map
 from info.utils.api_servers.llm_base import servers_llm_chat
@@ -31,7 +32,7 @@ def db_connect(request: Request,
                ):
     logger.info(str(req.dict()) + ' user_id: {}'.format(user_id))
 
-    if req.preset:
+    if req.preset and req.preset in DBQA_PRESETS.keys():
         db_name = req.preset
         kwargs = DBQA_PRESETS[req.preset]
     else:
@@ -44,8 +45,52 @@ def db_connect(request: Request,
         logger.error({'EXCEPTION': e})
         return JSONResponse(ErrorResponse(errcode=RET.DBERR, errmsg=u'数据库连接失败').dict(), status_code=500)
     else:
+        table_info = db.get_table_info_with_json()
         DBs.update({db_name: db})
-        return JSONResponse({'msg': '数据库连接成功'})
+
+        return JSONResponse({'table_info': table_info})
+
+
+@router.api_route('/ai/dbqa/db/disconnect', methods=['POST'], summary="DB disconnect")
+@limiter.limit(API_LIMIT['base'])
+def db_disconnect(request: Request,
+                  req: DBDisconnectRequest,
+                  user_id=Depends(verify_token)
+                  ):
+    logger.info(str(req.dict()) + ' user_id: {}'.format(user_id))
+
+    try:
+        DBs.pop(req.db_name)
+    except Exception as e:
+        logger.error({'EXCEPTION': e})
+
+    return JSONResponse({'msg': 'success'})
+
+
+@router.api_route('/ai/dbqa/db/table/data', methods=['POST'], summary="DB Table Data")
+@limiter.limit(API_LIMIT['base'])
+def get_db_table_data(request: Request,
+                      req: DBTableDataQueryRequest,
+                      user_id=Depends(verify_token)
+                      ):
+    logger.info(str(req.dict()) + ' user_id: {}'.format(user_id))
+
+    sql = f"select * from {req.table_name} where id > (select id from {req.table_name} order by id limit {int((req.page - 1) * req.page_size)}, 1) limit {req.page_size};"
+
+    try:
+        db_cls = DBs[req.db_name]
+        db_res = db_cls.db.run(sql)
+    except Exception as e:
+        logger.error({'EXCEPTION': e})
+        return JSONResponse(ErrorResponse(errcode=RET.DBERR, errmsg=error_map[RET.DBERR]).dict(), status_code=500)
+
+    resp = []
+    if len(db_res) > 1:
+        resp.extend([dict(
+            zip(db_res[0], [x.strftime('%Y-%m-%d %H:%M:%S') if isinstance(x, datetime.datetime) else x for x in i])) for
+            i in db_res[1:]])
+
+    return JSONResponse({'data': resp})
 
 
 @router.api_route('/ai/dbqa/chat', methods=['POST'], summary="Chat")

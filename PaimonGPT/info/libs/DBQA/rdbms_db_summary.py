@@ -22,9 +22,9 @@ class RdbmsSummary:
             charset=self.db.get_charset(),
             collation=self.db.get_collation(),
         )
-        tables = self.db.get_table_names()
+        self.tables = self.db.get_table_names()
         self.table_info_summaries = [
-            self.get_table_summary(table_name) for table_name in tables
+            self.get_table_summary(table_name) for table_name in self.tables
         ]
 
     def get_table_summary(self, table_name):
@@ -37,6 +37,17 @@ class RdbmsSummary:
     def table_summaries(self):
         """Get table summaries."""
         return self.table_info_summaries
+
+    def get_table_info_with_json(self):
+        tables = []
+        for table_name in self.tables:
+            columns = []
+            for column in self.db._inspector.get_columns(table_name):
+                column.update({'type': str(column['type'])})
+                columns.append(column)
+            tables.append({'table_name': table_name, 'columns': columns})
+
+        return tables
 
 
 def _parse_db_summary(
@@ -92,12 +103,3 @@ def _parse_table_summary(
     if comment.get("text"):
         table_str += f", and table comment: {comment.get('text')}"
     return table_str
-
-
-if __name__ == '__main__':
-    try:
-        rdbmssummary = RdbmsSummary()
-    except Exception as e:
-        print('error')
-    # for i in rdbmssummary.table_info_summaries:
-    #     print(i)
