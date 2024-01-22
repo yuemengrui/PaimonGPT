@@ -34,9 +34,9 @@ def get_app_list(request: Request,
             temp.update({'module_name': store_app.module_name, 'is_installed': store_app.is_installed})
 
         temp['kbs'] = []
-        app_kb = mysql_db.query(App_KB).filter(App_KB.app_id == app.id).all()
+        app_kb = mysql_db.query(App_KB).filter(App_KB.app_id == app.uid).all()
         if app_kb:
-            temp['kbs'] = [{'kb_id': x.kb_id, 'kb_name': x.kb_name} for x in app_kb]
+            temp['kbs'] = [{'id': x.kb_id, 'name': x.kb_name} for x in app_kb]
 
         res.append(temp)
 
@@ -63,7 +63,7 @@ def get_app_info(request: Request,
     resp['kbs'] = []
     app_kb = mysql_db.query(App_KB).filter(App_KB.app_id == app_info.uid).all()
     if app_kb:
-        resp['kbs'] = [{'kb_id': x.kb_id, 'kb_name': x.kb_name} for x in app_kb]
+        resp['kbs'] = [{'id': x.kb_id, 'name': x.kb_name} for x in app_kb]
 
     return JSONResponse(resp)
 
