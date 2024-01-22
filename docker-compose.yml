@@ -176,7 +176,8 @@ services:
 
   paimongpt_server:
     container_name: paimongpt_server
-    image: registry.cn-beijing.aliyuncs.com/yuemengrui/ai:pytorch2.0.1-cuda11.8-cudnn8-ubuntu20.04-py311-v0.1
+    image: registry.cn-beijing.aliyuncs.com/yuemengrui/ai:py311-ubuntu20.04-base
+#    image: registry.cn-beijing.aliyuncs.com/yuemengrui/ai:pytorch2.0.1-cuda11.8-cudnn8-ubuntu20.04-py311-v0.1
     command: [ "/bin/bash", "-c", "/workspace/PaimonGPT/docker_run.sh" ]
     depends_on:
       db:
