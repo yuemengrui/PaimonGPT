@@ -92,8 +92,8 @@ def app_info_modify(request: Request,
         for kb in req.kbs:
             app_kb = App_KB()
             app_kb.app_id = req.app_id
-            app_kb.kb_id = kb['kb_id']
-            app_kb.kb_name = kb['kb_name']
+            app_kb.kb_id = kb['id']
+            app_kb.kb_name = kb['name']
             mysql_db.add(app_kb)
 
     try:
@@ -156,8 +156,8 @@ def app_create(request: Request,
         for kb in req.kbs:
             app_kb = App_KB()
             app_kb.app_id = new_app.id
-            app_kb.kb_id = kb['kb_id']
-            app_kb.kb_name = kb['kb_name']
+            app_kb.kb_id = kb['id']
+            app_kb.kb_name = kb['name']
             mysql_db.add(app_kb)
 
     try:

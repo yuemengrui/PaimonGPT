@@ -48,7 +48,7 @@ def db_connect(request: Request,
         table_info = db.get_table_info_with_json()
         DBs.update({db_name: db})
 
-        return JSONResponse({'table_info': table_info})
+        return JSONResponse({'db_name': db_name, 'table_info': table_info})
 
 
 @router.api_route('/ai/dbqa/db/disconnect', methods=['POST'], summary="DB disconnect")
