@@ -2,7 +2,7 @@
 # @Author : YueMengRui
 from mylogger import logger
 from info.libs.Knowledge_Base.text_splitter.chinese_text_splitter import ChineseTextSplitter
-from langchain.document_loaders import UnstructuredFileLoader, TextLoader, UnstructuredMarkdownLoader, \
+from langchain_community.document_loaders import UnstructuredFileLoader, TextLoader, UnstructuredMarkdownLoader, \
     UnstructuredPowerPointLoader, UnstructuredWordDocumentLoader, UnstructuredHTMLLoader, CSVLoader, \
     UnstructuredODTLoader
 from .pdf_layout_loader import PDFLayoutLoader
