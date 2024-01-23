@@ -59,8 +59,7 @@ tableQA_prompt_template = """
 {context}
 """
 
-DBQA_PROMPT_TEMPLATE = """
-你是一个 SQL 专家，给你一个用户的问题，你会生成一条对应的 mysql 语法的 SQL 语句。
+DBQA_PROMPT_TEMPLATE = """你是一个 SQL 专家，给你一个用户的问题，你会生成一条对应的 mysql 语法的 SQL 语句。
 
 如果用户没有在问题中指定 sql 返回多少条数据，那么你生成的 sql 最多返回 {top_k} 条数据。 
 你应该尽可能少地使用表。
@@ -73,5 +72,4 @@ DBQA_PROMPT_TEMPLATE = """
 2. 不要查询不存在的列，注意哪一列位于哪张表中。
 3. 确保你生成的sql语句是可正确执行的语句。
 4. 不要返回你的思考过程，直接返回sql语句。使用 json 格式回答，确保你的回答是必须是正确的 json 格式，并且能被 python 语言的 `json.loads` 库解析, 格式如下：
-{{"sql": "你生成的sql"}}
-"""
+{{"sql": "你生成的sql"}}"""
