@@ -1,13 +1,16 @@
 # *_*coding:utf-8 *_*
 # @Author : YueMengRui
+import time
+import json
 import datetime
+import requests
 from fastapi import APIRouter, Request, Depends
 from info.utils.Authentication import verify_token
-from info import logger, limiter, DBs
-from configs import API_LIMIT, DBQA_PRESETS
+from info import logger, limiter, DBs, LLM_Models
+from configs import API_LIMIT, DBQA_PRESETS, LLM_SERVER_APIS
 from configs.prompt_template import DBQA_PROMPT_TEMPLATE
 from .protocol import DBConnectRequest, ErrorResponse, DBChatRequest, DBTableDataQueryRequest, DBDisconnectRequest
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from info.utils.response_code import RET, error_map
 from info.utils.api_servers.llm_base import servers_llm_chat
 from info.utils.common import paser_str_to_json
@@ -102,7 +105,7 @@ def dbqa_chat(request: Request,
               user_id=Depends(verify_token)
               ):
     logger.info(str(req.dict()) + ' user_id: {}'.format(user_id))
-
+    start = time.time()
     try:
         db_cls = DBs[req.db_name]
         table_info = db_cls.db.table_info
@@ -137,8 +140,36 @@ def dbqa_chat(request: Request,
                           [x.strftime('%Y-%m-%d %H:%M:%S') if isinstance(x, datetime.datetime) else x for x in i]))
                  for i in res[1:]])
 
-        return JSONResponse({'data': results, 'sql': sql})
     except Exception as e:
         logger.error({'EXCEPTION': e})
         return JSONResponse(ErrorResponse(errcode=RET.SERVERERR, errmsg=error_map[RET.SERVERERR]).dict(),
                             status_code=500)
+    else:
+        if len(results) == 0:
+            def stream_generate():
+                res = {'answer': '抱歉，我不知道该问题的答案，请给我提供更多上下文我才能理解'}
+                res['time_cost'].update({'total': f"{time.time() - start:.3f}s"})
+                res.update({'sql': sql, 'query_res': []})
+                yield f"data: {json.dumps(res, ensure_ascii=False)}\n\n"
+
+            return StreamingResponse(stream_generate(), media_type="text/event-stream")
+        else:
+            prompt = f"你是一个出色的助手，你会根据给定的材料来回答用户的问题。\n用户的问题是：{req.prompt} \n相关材料：{str(results)}"
+            req_data = {
+                "model_name": req.model_name,
+                "prompt": prompt,
+                "history": req.history,
+                "generation_configs": req.generation_configs,
+                "stream": True
+            }
+            resp = requests.post(url=LLM_Models[req.model_name]['url_prefix'] + LLM_SERVER_APIS['chat'], json=req_data,
+                                 stream=True)
+
+            def stream_generate():
+                for line in resp.iter_content(chunk_size=None):
+                    res = json.loads(line.decode('utf-8'))
+                    res['time_cost'].update({'total': f"{time.time() - start:.3f}s"})
+                    res.update({'sql': sql, 'query_res': results})
+                    yield f"data: {json.dumps(res, ensure_ascii=False)}\n\n"
+
+            return StreamingResponse(stream_generate(), media_type="text/event-stream")
