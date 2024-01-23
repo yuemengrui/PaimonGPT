@@ -82,6 +82,7 @@ def app_info_modify(request: Request,
 
     app_info.name = req.name
     app_info.llm_name = req.llm_name
+    app_info.description = req.description
 
     if len(req.kbs) > 0:
         mysql_db.query(App_KB).filter(App_KB.app_id == req.app_id).delete()

@@ -75,7 +75,9 @@ def get_db_table_data(request: Request,
                       ):
     logger.info(str(req.dict()) + ' user_id: {}'.format(user_id))
 
-    sql = f"select * from {req.table_name} where id > (select id from {req.table_name} order by id limit {int((req.page - 1) * req.page_size)}, 1) limit {req.page_size};"
+    sql = f"select * from {req.table_name} where id >= (select id from {req.table_name} order by id limit {int((req.page - 1) * req.page_size)}, 1) limit {req.page_size};"
+
+    logger.info({'sql': sql})
 
     try:
         db_cls = DBs[req.db_name]
@@ -118,9 +120,14 @@ def dbqa_chat(request: Request,
     logger.info({'sql': resp})
 
     resp_json_data = paser_str_to_json(resp)
+    logger.info({'sql': resp_json_data})
 
     try:
         sql = resp_json_data['sql']
+        if 'params' in resp_json_data:
+            sql = sql % tuple(resp_json_data['params'])
+
+        logger.info({'sql': sql})
         res = db_cls.db.run(sql)
         return JSONResponse({'data': res})
     except Exception as e:

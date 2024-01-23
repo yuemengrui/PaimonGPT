@@ -120,6 +120,7 @@ class AppInfoModifyRequest(BaseModel):
     kbs: List = Field(default=[])
     name: str
     llm_name: str
+    description: str = Field(default='')
 
 
 class AppCreateRequest(BaseModel):
