@@ -137,7 +137,7 @@ def dbqa_chat(request: Request,
                           [x.strftime('%Y-%m-%d %H:%M:%S') if isinstance(x, datetime.datetime) else x for x in i]))
                  for i in res[1:]])
 
-        return JSONResponse({'data': results})
+        return JSONResponse({'data': results, 'sql': sql})
     except Exception as e:
         logger.error({'EXCEPTION': e})
         return JSONResponse(ErrorResponse(errcode=RET.SERVERERR, errmsg=error_map[RET.SERVERERR]).dict(),
