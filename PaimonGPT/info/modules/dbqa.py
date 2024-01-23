@@ -129,6 +129,7 @@ def dbqa_chat(request: Request,
 
         logger.info({'sql': sql})
         res = db_cls.db.run(sql)
+        logger.info({'db res': res})
         return JSONResponse({'data': res})
     except Exception as e:
         logger.error({'EXCEPTION': e})
