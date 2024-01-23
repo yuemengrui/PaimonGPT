@@ -29,8 +29,8 @@ def get_app_list(request: Request,
     for app in app_list:
         temp = app.to_dict()
 
-        if app.is_store:
-            store_app = mysql_db.query(AppStore).filter(AppStore.uid == app.store_app_uid).first()
+        if app.is_appstore:
+            store_app = mysql_db.query(AppStore).filter(AppStore.uid == app.appstore_uid).first()
             temp.update({'module_name': store_app.module_name, 'is_installed': store_app.is_installed})
 
         temp['kbs'] = []
@@ -56,8 +56,8 @@ def get_app_info(request: Request,
         return JSONResponse(ErrorResponse(errcode=RET.NODATA, errmsg=error_map[RET.NODATA]).dict(), status_code=400)
 
     resp = app_info.to_dict()
-    if app_info.is_store:
-        store_app = mysql_db.query(AppStore).filter(AppStore.uid == app_info.store_app_uid).first()
+    if app_info.is_appstore:
+        store_app = mysql_db.query(AppStore).filter(AppStore.uid == app_info.appstore_uid).first()
         resp.update({'module_name': store_app.module_name, 'is_installed': store_app.is_installed})
 
     resp['kbs'] = []
@@ -121,8 +121,8 @@ def app_create(request: Request,
     new_app.name = store_app.name
     new_app.llm_name = list(LLM_Models.keys())[0] if len(list(LLM_Models.keys())) > 0 else ''
     new_app.description = store_app.description
-    new_app.is_store = True
-    new_app.store_app_uid = req.app_id
+    new_app.is_appstore = True
+    new_app.appstore_uid = req.app_id
     mysql_db.add(new_app)
 
     try:

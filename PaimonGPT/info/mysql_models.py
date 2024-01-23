@@ -70,7 +70,7 @@ class App(Base, BaseModel):
     llm_name = Column(String(32), comment="应用关联的大模型名")
     description = Column(String(256), comment="应用描述")
     is_appstore = Column(Boolean, default=False, comment='是否是商城应用')
-    appstore_app_uid = Column(BIGINT, comment='商城应用唯一id')
+    appstore_uid = Column(BIGINT, comment='商城应用唯一id')
     is_delete = Column(Boolean, default=False, comment="是否被删除，1表示已被删除，0表示未删除")
 
     def to_dict(self):
@@ -79,8 +79,8 @@ class App(Base, BaseModel):
             "name": self.name,
             "llm_name": self.llm_name,
             "description": self.description,
-            "is_store": self.is_store,
-            "store_app_uid": self.store_app_uid
+            "is_appstore": self.is_appstore,
+            "appstore_uid": self.appstore_uid
         }
 
 
