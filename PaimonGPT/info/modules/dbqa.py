@@ -130,7 +130,14 @@ def dbqa_chat(request: Request,
         logger.info({'sql': sql})
         res = db_cls.db.run(sql)
         logger.info({'db res': res})
-        return JSONResponse({'data': res})
+        results = []
+        if len(res) > 1:
+            results.extend(
+                [dict(zip(res[0],
+                          [x.strftime('%Y-%m-%d %H:%M:%S') if isinstance(x, datetime.datetime) else x for x in i]))
+                 for i in res[1:]])
+
+        return JSONResponse({'data': results})
     except Exception as e:
         logger.error({'EXCEPTION': e})
         return JSONResponse(ErrorResponse(errcode=RET.SERVERERR, errmsg=error_map[RET.SERVERERR]).dict(),
