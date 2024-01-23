@@ -106,12 +106,19 @@ def dbqa_chat(request: Request,
               ):
     logger.info(str(req.dict()) + ' user_id: {}'.format(user_id))
     start = time.time()
+
+    def error_stream_generate(sql=''):
+        res = {'answer': '抱歉，我不知道该问题的答案，请给我提供更多上下文我才能理解', 'time_cost': {}}
+        res['time_cost'].update({'total': f"{time.time() - start:.3f}s"})
+        res.update({'sql': sql, 'query_res': []})
+        yield f"data: {json.dumps(res, ensure_ascii=False)}\n\n"
+
     try:
         db_cls = DBs[req.db_name]
         table_info = db_cls.db.table_info
     except Exception as e:
         logger.error({'EXCEPTION': e})
-        return JSONResponse(ErrorResponse(errcode=RET.DBERR, errmsg=error_map[RET.DBERR]).dict(), status_code=500)
+        return StreamingResponse(error_stream_generate(''), media_type="text/event-stream")
 
     prompt = DBQA_PROMPT_TEMPLATE.format(top_k=10, query=req.prompt, table_info=table_info)
     logger.info(f"prompt: {prompt}")
@@ -125,6 +132,7 @@ def dbqa_chat(request: Request,
     resp_json_data = paser_str_to_json(resp)
     logger.info({'sql': resp_json_data})
 
+    sql = ''
     try:
         sql = resp_json_data['sql']
         if 'params' in resp_json_data:
@@ -142,17 +150,10 @@ def dbqa_chat(request: Request,
 
     except Exception as e:
         logger.error({'EXCEPTION': e})
-        return JSONResponse(ErrorResponse(errcode=RET.SERVERERR, errmsg=error_map[RET.SERVERERR]).dict(),
-                            status_code=500)
+        return StreamingResponse(error_stream_generate(sql), media_type="text/event-stream")
     else:
         if len(results) == 0:
-            def stream_generate():
-                res = {'answer': '抱歉，我不知道该问题的答案，请给我提供更多上下文我才能理解'}
-                res['time_cost'].update({'total': f"{time.time() - start:.3f}s"})
-                res.update({'sql': sql, 'query_res': []})
-                yield f"data: {json.dumps(res, ensure_ascii=False)}\n\n"
-
-            return StreamingResponse(stream_generate(), media_type="text/event-stream")
+            return StreamingResponse(error_stream_generate(sql), media_type="text/event-stream")
         else:
             prompt = f"你是一个出色的助手，你会根据给定的材料来回答用户的问题。\n用户的问题是：{req.prompt} \n相关材料：{str(results)}"
             req_data = {
