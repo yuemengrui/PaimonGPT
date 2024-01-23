@@ -80,11 +80,8 @@ def app_info_modify(request: Request,
     if app_info is None:
         return JSONResponse(ErrorResponse(errcode=RET.NODATA, errmsg=error_map[RET.NODATA]).dict(), status_code=400)
 
-    if app_info.is_system:
-        app_info.llm_name = req.llm_name
-    else:
-        app_info.name = req.name
-        app_info.llm_name = req.llm_name
+    app_info.name = req.name
+    app_info.llm_name = req.llm_name
 
     if len(req.kbs) > 0:
         mysql_db.query(App_KB).filter(App_KB.app_id == req.app_id).delete()
