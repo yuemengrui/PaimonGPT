@@ -116,6 +116,7 @@ def dbqa_chat(request: Request,
     try:
         db_cls = DBs[req.db_name]
         table_info = db_cls.db.table_info
+        # table_summaries = db_cls.table_summaries()
     except Exception as e:
         logger.error({'EXCEPTION': e})
         return StreamingResponse(error_stream_generate(''), media_type="text/event-stream")
@@ -155,7 +156,7 @@ def dbqa_chat(request: Request,
         if len(results) == 0:
             return StreamingResponse(error_stream_generate(sql), media_type="text/event-stream")
         else:
-            prompt = f"你是一个出色的助手，你会根据给定的材料来回答用户的问题。\n用户的问题是：{req.prompt} \n相关材料：{str(results)}"
+            prompt = f"你是一个出色的助手，我会给你用户的问题和mysql数据库的查询结果，你要根据数据库查询结果来回答用户的问题。\n用户的问题是：{req.prompt} \n数据库查询结果是：{str(results)}"
             req_data = {
                 "model_name": req.model_name,
                 "prompt": prompt,
