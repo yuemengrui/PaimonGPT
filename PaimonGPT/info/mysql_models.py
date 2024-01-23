@@ -14,6 +14,7 @@ class BaseModel(object):
 
 class FileSystem(Base, BaseModel):
     __tablename__ = 'file_system'
+    __table_args__ = {'comment': '文件系统表'}
     id = Column(Integer, primary_key=True)
     file_hash = Column(String(64), nullable=False, index=True)
     file_type = Column(String(256))
@@ -35,19 +36,21 @@ class UserFileSystem(Base, BaseModel):
 
 class User(Base, BaseModel):
     __tablename__ = 'user'
+    __table_args__ = {'comment': '用户表'}
     id = Column(Integer, primary_key=True)
-    username = Column(String(32), nullable=False, unique=True, index=True)
+    username = Column(String(32), nullable=False, unique=True, index=True, comment="用户名")
     password = Column(String(256), nullable=False)
 
 
 class AppStore(Base, BaseModel):
-    __tablename__ = 'app_store'
+    __tablename__ = 'appstore'
+    __table_args__ = {'comment': '应用商城中的应用表'}
     id = Column(Integer, primary_key=True)
-    uid = Column(BIGINT, nullable=False, unique=True)
-    name = Column(String(16), nullable=False)
-    description = Column(String(256))
+    uid = Column(BIGINT, nullable=False, unique=True, comment="唯一id")
+    name = Column(String(16), nullable=False, comment="应用名")
+    description = Column(String(256), comment="应用描述")
     module_name = Column(String(64), nullable=False)
-    is_installed = Column(Boolean, default=True, comment="是否已上架，0:已下架，1:已上架")
+    is_installed = Column(Boolean, default=True, comment="应用是否已上架到商城，0表示已下架，1表示已上架")
 
     def to_dict(self):
         return {
@@ -59,15 +62,16 @@ class AppStore(Base, BaseModel):
 
 class App(Base, BaseModel):
     __tablename__ = 'app'
+    __table_args__ = {'comment': '用户的应用表'}
     id = Column(Integer, primary_key=True)
-    uid = Column(BIGINT, nullable=False, unique=True)
-    user_id = Column(Integer, nullable=False)
-    name = Column(String(32), nullable=False)
-    llm_name = Column(String(32))
-    description = Column(String(256))
-    is_store = Column(Boolean, default=False, comment='是否是商城应用')
-    store_app_uid = Column(BIGINT, comment='商城应用uid')
-    is_delete = Column(Boolean, default=False)
+    uid = Column(BIGINT, nullable=False, unique=True, comment="唯一id")
+    user_id = Column(Integer, nullable=False, comment="用户id")
+    name = Column(String(32), nullable=False, comment="应用名称")
+    llm_name = Column(String(32), comment="应用关联的大模型名")
+    description = Column(String(256), comment="应用描述")
+    is_appstore = Column(Boolean, default=False, comment='是否是商城应用')
+    appstore_app_uid = Column(BIGINT, comment='商城应用唯一id')
+    is_delete = Column(Boolean, default=False, comment="是否被删除，1表示已被删除，0表示未删除")
 
     def to_dict(self):
         return {
@@ -81,20 +85,22 @@ class App(Base, BaseModel):
 
 
 class App_KB(Base, BaseModel):
-    __tablename__ = 'app_kb'
+    __tablename__ = 'app_knowledgebase'
+    __table_args__ = {'comment': '应用与知识库关联表'}
     id = Column(Integer, primary_key=True)
-    app_id = Column(BIGINT, nullable=False)
-    kb_id = Column(BIGINT, nullable=False)
-    kb_name = Column(String(32), nullable=False)
+    app_id = Column(BIGINT, nullable=False, comment="应用的唯一id")
+    kb_id = Column(BIGINT, nullable=False, comment="知识库的唯一id")
+    kb_name = Column(String(32), nullable=False, comment="知识库名")
 
 
 class ChatRecord(Base, BaseModel):
     __tablename__ = 'chat_record'
+    __table_args__ = {'comment': '应用的对话表'}
     id = Column(Integer, primary_key=True)
-    app_id = Column(BIGINT, nullable=False)
-    name = Column(String(16))
+    app_id = Column(BIGINT, nullable=False, comment="应用的唯一id")
+    name = Column(String(16), comment="对话名")
     dynamic_name = Column(String(16))
-    is_delete = Column(Boolean, default=False)
+    is_delete = Column(Boolean, default=False, comment="是否被删除，1表示已被删除，0表示未删除")
 
     def to_dict(self):
         return {
@@ -106,16 +112,17 @@ class ChatRecord(Base, BaseModel):
 
 class ChatMessageRecord(Base, BaseModel):
     __tablename__ = 'chat_message_record'
+    __table_args__ = {'comment': '对话中的消息表'}
     id = Column(Integer, primary_key=True)
-    uid = Column(String(64), nullable=False)
-    chat_id = Column(Integer, nullable=False)
-    role = Column(String(32), default='assistant', nullable=False)
-    content = Column(TEXT)
+    uid = Column(String(64), nullable=False, comment="唯一id")
+    chat_id = Column(Integer, nullable=False, comment="对话表的id")
+    role = Column(String(32), default='assistant', nullable=False, comment="角色")
+    content = Column(TEXT, comment="消息的内容")
     type = Column(String(16), default='text', comment='消息类型：text image')
     url = Column(String(256))
     response = Column(JSON, default={})
     llm_name = Column(String(32))
-    is_delete = Column(Boolean, default=False)
+    is_delete = Column(Boolean, default=False, comment="是否被删除，1表示已被删除，0表示未删除")
 
     def to_dict(self):
         return {
@@ -140,14 +147,15 @@ class MultiQueryRetriever(Base, BaseModel):
 
 
 class KB(Base, BaseModel):
-    __tablename__ = 'kb'
+    __tablename__ = 'knowledgebase'
+    __table_args__ = {'comment': '知识库表'}
     id = Column(Integer, primary_key=True)
-    uid = Column(BIGINT, nullable=False, unique=True)
-    user_id = Column(Integer, nullable=False)
-    name = Column(String(32), nullable=False)
-    description = Column(String(256))
-    embedding_model = Column(String(32), nullable=False)
-    is_delete = Column(Boolean, default=False)
+    uid = Column(BIGINT, nullable=False, unique=True, comment="唯一id")
+    user_id = Column(Integer, nullable=False, comment="用户id")
+    name = Column(String(32), nullable=False, comment="知识库名")
+    description = Column(String(256), comment="知识库描述")
+    embedding_model = Column(String(32), nullable=False, comment="知识库关联的embedding模型")
+    is_delete = Column(Boolean, default=False, comment="是否被删除，1表示已被删除，0表示未删除")
 
     def to_dict(self):
         return {
@@ -159,7 +167,8 @@ class KB(Base, BaseModel):
 
 
 class KBFile(Base, BaseModel):
-    __tablename__ = 'kb_file'
+    __tablename__ = 'knowledgebase_file'
+    __table_args__ = {'comment': '知识库中的文件表'}
     id = Column(Integer, primary_key=True)
     kb_id = Column(BIGINT, nullable=False)
     method_id = Column(Integer, nullable=False, comment='1:自动分段，2:QA拆分， 3:json导入')
@@ -170,7 +179,7 @@ class KBFile(Base, BaseModel):
     file_url = Column(String(256))
     chunk_total = Column(Integer, default=0)
     is_disable = Column(Boolean, default=False)
-    is_delete = Column(Boolean, default=False)
+    is_delete = Column(Boolean, default=False, comment="是否被删除，1表示已被删除，0表示未删除")
 
     def to_dict(self):
         return {
@@ -188,7 +197,8 @@ class KBFile(Base, BaseModel):
 
 
 class KBFileChunks(Base, BaseModel):
-    __tablename__ = 'kb_file_chunks'
+    __tablename__ = 'knowledgebase_file_chunks'
+    __table_args__ = {'comment': '知识库文件的chunk表'}
     id = Column(Integer, primary_key=True)
     file_id = Column(Integer, nullable=False)
     type = Column(String(16), nullable=False)  # text, table, figure
