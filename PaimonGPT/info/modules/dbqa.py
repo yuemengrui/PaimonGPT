@@ -115,10 +115,7 @@ def dbqa_chat(request: Request,
 
     try:
         db_cls = DBs[req.db_name]
-        if req.table_summary:
-            table_info = db_cls.table_summaries()
-        else:
-            table_info = db_cls.db.table_info
+        table_info = db_cls.get_related_table_summaries(req.prompt)
     except Exception as e:
         logger.error({'EXCEPTION': e})
         return StreamingResponse(error_stream_generate(''), media_type="text/event-stream")

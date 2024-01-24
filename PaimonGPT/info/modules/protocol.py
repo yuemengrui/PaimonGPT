@@ -227,4 +227,3 @@ class DBChatRequest(BaseModel):
     prompt: str
     history: List = Field(default=[], description="历史记录")
     generation_configs: Dict = {}
-    table_summary: bool = Field(default=False, description="是否summary table info")

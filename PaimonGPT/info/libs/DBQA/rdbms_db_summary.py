@@ -1,5 +1,8 @@
+import numpy as np
 from typing import List
+from mylogger import logger
 from .rdbms import RDBMSDatabase
+from info.utils.api_servers.llm_base import servers_embedding_text
 
 
 class RdbmsSummary:
@@ -8,8 +11,10 @@ class RdbmsSummary:
     table_name(column1(column1 comment),column2(column2 comment),column3(column3 comment) and index keys, and table comment is {table_comment})
     """
 
-    def __init__(self, host, port, username, password, db_name):
+    def __init__(self, host, port, username, password, db_name, embedding_model=None):
         self.summary_template = "{table_name}({columns})"
+
+        self.embedding_model = embedding_model
 
         try:
             self.db = RDBMSDatabase.from_uri_db(host=host, port=port, user=username, pwd=password, db_name=db_name)
@@ -22,10 +27,46 @@ class RdbmsSummary:
             charset=self.db.get_charset(),
             collation=self.db.get_collation(),
         )
-        self.tables = self.db.get_table_names()
-        self.table_info_summaries = [
-            self.get_table_summary(table_name) for table_name in self.tables
-        ]
+        self.tables = list(self.db.get_table_names())
+
+        self.table_info_summaries = {table_name: self.get_table_summary(table_name) for table_name in self.tables}
+
+        self.table_info_embeddings = None
+        self.get_table_embedding()
+
+    def get_table_embedding(self):
+        if self.embedding_model is not None:
+            sentences = [self.get_table_summary(table_name) for table_name in self.tables]
+            try:
+                embeddings = servers_embedding_text(sentences=sentences, model_name=self.embedding_model).json()[
+                    'embeddings']
+                self.table_info_embeddings = {self.tables[i]: np.array(embeddings[i]) for i in range(len(embeddings))}
+            except Exception as e:
+                logger.error({'EXCEPTION': e})
+
+    def get_related_table_summaries(self, query, limit=5, threshold=None):
+        if len(self.tables) > 3 and self.table_info_embeddings is not None:
+            try:
+                query_embedding = np.array(
+                    servers_embedding_text(sentences=[query], model_name=self.embedding_model).json()['embeddings'][0])
+            except Exception as e:
+                logger.error({'EXCEPTION': e})
+            else:
+                table_scores = []
+                for t_name, emb in self.table_info_embeddings.items():
+                    cos_sim = query_embedding.dot(emb) / (np.linalg.norm(query_embedding) * np.linalg.norm(emb))
+                    if isinstance(threshold, (int, float)):
+                        if cos_sim < threshold:
+                            continue
+
+                    table_scores.append([t_name, cos_sim])
+
+                table_scores.sort(key=lambda x: x[1], reverse=True)
+                related_tables = [x[0] for x in table_scores[:limit]]
+
+                return '\n'.join([self.table_info_summaries[t] for t in related_tables])
+
+        return self.table_summaries()
 
     def get_table_summary(self, table_name):
         """Get table summary for table.
@@ -36,7 +77,7 @@ class RdbmsSummary:
 
     def table_summaries(self):
         """Get table summaries."""
-        return self.table_info_summaries
+        return '\n'.join(list(self.table_info_summaries.values()))
 
     def get_table_info_with_json(self):
         tables = []
