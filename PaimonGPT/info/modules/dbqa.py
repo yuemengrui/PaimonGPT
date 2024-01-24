@@ -6,7 +6,7 @@ import datetime
 import requests
 from fastapi import APIRouter, Request, Depends
 from info.utils.Authentication import verify_token
-from info import logger, limiter, DBs, LLM_Models
+from info import logger, limiter, DBs, LLM_Models, Embedding_Models
 from configs import API_LIMIT, DBQA_PRESETS, LLM_SERVER_APIS
 from configs.prompt_template import DBQA_PROMPT_TEMPLATE
 from .protocol import DBConnectRequest, ErrorResponse, DBChatRequest, DBTableDataQueryRequest, DBDisconnectRequest
@@ -42,8 +42,10 @@ def db_connect(request: Request,
         db_name = req.db_name
         kwargs = req.dict()
 
+    embedding_model = list(Embedding_Models.keys())[0] if len(Embedding_Models) > 0 else None
+
     try:
-        db = RdbmsSummary(**kwargs)
+        db = RdbmsSummary(embedding_model=embedding_model, **kwargs)
     except Exception as e:
         logger.error({'EXCEPTION': e})
         return JSONResponse(ErrorResponse(errcode=RET.DBERR, errmsg=u'数据库连接失败').dict(), status_code=500)
