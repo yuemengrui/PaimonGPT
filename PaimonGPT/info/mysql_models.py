@@ -218,3 +218,27 @@ class KBFileChunks(Base, BaseModel):
             "url": self.url,
             "html": self.html
         }
+
+
+class DBQADB(Base, BaseModel):
+    __tablename__ = 'dbqa_db'
+    __table_args__ = {'comment': '数据库问答数据库表'}
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, nullable=False, comment="用户id")
+    chat_id = Column(Integer, comment="对话id")
+    host = Column(String(16), nullable=False)
+    port = Column(Integer, nullable=False)
+    username = Column(String(32), nullable=False)
+    db_name = Column(String(64), nullable=False)
+
+
+class DBQADBTableDescription(Base, BaseModel):
+    __tablename__ = 'dbqa_db_table_description'
+    __table_args__ = {'comment': '数据库问答数据库表描述'}
+    id = Column(Integer, primary_key=True)
+    db_id = Column(Integer, nullable=False, comment="数据库id")
+    table_name = Column(String(32), nullable=False)
+    table_comment = Column(String(512))
+    columns = Column(JSON, default=[])
+    is_deprecated = Column(Boolean, default=False, comment="是否弃用")
+    examples = Column(JSON)

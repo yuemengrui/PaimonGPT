@@ -202,9 +202,10 @@ class TableAnalysisRequest(BaseModel):
 
 
 class DBConnectRequest(BaseModel):
+    app_id: int
     preset: str = Field(default=None, description='预设的db name')
     host: str = Field(default=None, description='DB host')
-    port: Union[int, str] = Field(default=3306, description='DB port')
+    port: int = Field(default=3306, description='DB port')
     username: str = Field(default=None, description='DB username')
     password: str = Field(default=None, description='DB password')
     db_name: str = Field(default=None, description='DB name')
@@ -212,6 +213,11 @@ class DBConnectRequest(BaseModel):
 
 class DBDisconnectRequest(BaseModel):
     db_name: str
+
+
+class DBTableDescriptionRequest(BaseModel):
+    db_name: str
+    table_description: List
 
 
 class DBTableDataQueryRequest(BaseModel):
@@ -222,6 +228,10 @@ class DBTableDataQueryRequest(BaseModel):
 
 
 class DBChatRequest(BaseModel):
+    app_id: int
+    chat_id: int
+    uid: str
+    answer_uid: str
     db_name: str = Field(description='DB name')
     model_name: str = Field(description="模型名称")
     prompt: str

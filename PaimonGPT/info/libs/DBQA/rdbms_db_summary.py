@@ -29,20 +29,44 @@ class RdbmsSummary:
         )
         self.tables = list(self.db.get_table_names())
 
-        self.table_info_summaries = {table_name: self.get_table_summary(table_name) for table_name in self.tables}
+        self.table_info_summaries = [self.get_table_summary(table_name) for table_name in self.tables]
+
+        self.table_description = {}
 
         self.table_info_embeddings = None
-        self.get_table_embedding()
 
-    def get_table_embedding(self):
+    def load_table_embeddings(self, table_description):
         if self.embedding_model is not None:
-            sentences = [self.get_table_summary(table_name) for table_name in self.tables]
-            try:
-                embeddings = servers_embedding_text(sentences=sentences, model_name=self.embedding_model).json()[
-                    'embeddings']
-                self.table_info_embeddings = {self.tables[i]: np.array(embeddings[i]) for i in range(len(embeddings))}
-            except Exception as e:
-                logger.error({'EXCEPTION': e})
+            tables = []
+            sentences = []
+            for i in table_description:
+                if i.get('is_deprecated', None) is None:
+                    continue
+
+                col = []
+                for c in i['columns']:
+                    if c.get('is_deprecated', None) is None:
+                        continue
+                    if c['comment']:
+                        col.append(f"{c['name']}({c['comment']})")
+                    else:
+                        col.append(f"{c['name']}")
+
+                if len(col) > 0:
+                    col_str = ', '.join(col)
+
+                    table_str = f"表名:{i['table_name']} 表描述:{i['table_comment']} - 详细字段: [{col_str}]"
+                    sentences.append(table_str)
+                    tables.append(i['table_name'])
+                    self.table_description.update({i['table_name']: table_str})
+
+            if len(tables) > 0:
+                try:
+                    embeddings = servers_embedding_text(sentences=sentences, model_name=self.embedding_model).json()[
+                        'embeddings']
+                    self.table_info_embeddings = {tables[i]: np.array(embeddings[i]) for i in range(len(embeddings))}
+                except Exception as e:
+                    logger.error({'EXCEPTION': e})
 
     def get_related_table_summaries(self, query, limit=5, threshold=None):
         if len(self.tables) > 3 and self.table_info_embeddings is not None:
@@ -64,7 +88,10 @@ class RdbmsSummary:
                 table_scores.sort(key=lambda x: x[1], reverse=True)
                 related_tables = [x[0] for x in table_scores[:limit]]
 
-                return '\n'.join([self.table_info_summaries[t] for t in related_tables])
+                return '\n'.join([self.table_description[t] for t in related_tables])
+        else:
+            if len(self.table_description) > 0:
+                return '\n'.join(list(self.table_description.values()))
 
         return self.table_summaries()
 
@@ -77,18 +104,41 @@ class RdbmsSummary:
 
     def table_summaries(self):
         """Get table summaries."""
-        return '\n'.join(list(self.table_info_summaries.values()))
+        return '\n'.join(self.table_info_summaries)
 
-    def get_table_info_with_json(self):
+    def get_table_info_all(self):
         tables = []
         for table_name in self.tables:
+            table_comment = None
+            try:
+                comment = self.db._inspector.get_table_comment(table_name)
+                table_comment = comment.get('text')
+            except Exception as e:
+                logger.error({'EXCEPTION': e})
+
             columns = []
             for column in self.db._inspector.get_columns(table_name):
                 column.update({'type': str(column['type'])})
                 columns.append(column)
-            tables.append({'table_name': table_name, 'columns': columns})
+            tables.append({'table_name': table_name, 'table_comment': table_comment, 'columns': columns})
 
         return tables
+
+    def get_table_info_by_table(self, table_name):
+
+        table_comment = None
+        try:
+            comment = self.db._inspector.get_table_comment(table_name)
+            table_comment = comment.get('text')
+        except Exception as e:
+            logger.error({'EXCEPTION': e})
+
+        columns = []
+        for column in self.db._inspector.get_columns(table_name):
+            column.update({'type': str(column['type'])})
+            columns.append(column)
+
+        return table_comment, columns
 
 
 def _parse_db_summary(
