@@ -1,5 +1,6 @@
 import numpy as np
 from typing import List
+from copy import deepcopy
 from mylogger import logger
 from .rdbms import RDBMSDatabase
 from info.utils.api_servers.llm_base import servers_embedding_text
@@ -21,12 +22,6 @@ class RdbmsSummary:
         except Exception as e:
             raise f'db connect failure: {e}'
 
-        self.metadata = """user info :{users}, grant info:{grant}, charset:{charset}, collation:{collation}""".format(
-            users=self.db.get_users(),
-            grant=self.db.get_grants(),
-            charset=self.db.get_charset(),
-            collation=self.db.get_collation(),
-        )
         self.tables = list(self.db.get_table_names())
 
         self.table_info_summaries = [self.get_table_summary(table_name) for table_name in self.tables]
@@ -109,36 +104,35 @@ class RdbmsSummary:
     def get_table_info_all(self):
         tables = []
         for table_name in self.tables:
-            table_comment = None
-            try:
-                comment = self.db._inspector.get_table_comment(table_name)
-                table_comment = comment.get('text')
-            except Exception as e:
-                logger.error({'EXCEPTION': e})
+            table_comment, columns = self.get_table_info_by_table(table_name)
 
-            columns = []
-            for column in self.db._inspector.get_columns(table_name):
-                column.update({'type': str(column['type'])})
-                columns.append(column)
             tables.append({'table_name': table_name, 'table_comment': table_comment, 'columns': columns})
 
         return tables
 
     def get_table_info_by_table(self, table_name):
 
-        table_comment = None
-        try:
-            comment = self.db._inspector.get_table_comment(table_name)
-            table_comment = comment.get('text')
-        except Exception as e:
-            logger.error({'EXCEPTION': e})
+        return _parse_table_comment(self.db, table_name), _parse_table_columns(self.db, table_name)
 
-        columns = []
-        for column in self.db._inspector.get_columns(table_name):
-            column.update({'type': str(column['type'])})
-            columns.append(column)
 
-        return table_comment, columns
+def _parse_table_comment(conn: RDBMSDatabase, table_name: str):
+    table_comment = None
+    try:
+        table_comment = conn._inspector.get_table_comment(table_name).get('text')
+    except Exception as e:
+        logger.error({'EXCEPTION': e})
+
+    return table_comment
+
+
+def _parse_table_columns(conn: RDBMSDatabase, table_name: str):
+    columns = []
+    for column in conn._inspector.get_columns(table_name):
+        col = deepcopy(column)
+        col.update({'type': str(col['type'])})
+        columns.append(col)
+
+    return columns
 
 
 def _parse_db_summary(
