@@ -35,12 +35,12 @@ class RdbmsSummary:
             tables = []
             sentences = []
             for i in table_description:
-                if i.get('is_deprecated', None) is None:
+                if i.get('is_deprecated', False):
                     continue
 
                 col = []
                 for c in i['columns']:
-                    if c.get('is_deprecated', None) is None:
+                    if c.get('is_deprecated', False):
                         continue
                     if c['comment']:
                         col.append(f"{c['name']}({c['comment']})")
@@ -130,6 +130,7 @@ def _parse_table_columns(conn: RDBMSDatabase, table_name: str):
     for column in conn._inspector.get_columns(table_name):
         col = deepcopy(column)
         col.update({'type': str(col['type'])})
+        col.update({'is_deprecated': False})
         columns.append(col)
 
     return columns
