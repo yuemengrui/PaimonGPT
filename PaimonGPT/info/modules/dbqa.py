@@ -90,6 +90,14 @@ def db_connect(request: Request,
                         'columns': columns
                     })
         else:
+            for table_name in db.tables:
+                table_comment, columns = db.get_table_info_by_table(table_name)
+                table_description.append({
+                    'table_name': table_name,
+                    'table_comment': table_comment,
+                    'is_deprecated': False,
+                    'columns': columns
+                })
             new_chat = ChatRecord()
             new_chat.app_id = req.app_id
             mysql_db.add(new_chat)
