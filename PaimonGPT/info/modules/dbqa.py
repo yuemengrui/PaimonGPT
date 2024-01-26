@@ -80,7 +80,7 @@ def db_connect(request: Request,
                         'table_comment': table_desc.table_comment,
                         'is_deprecated': table_desc.is_deprecated,
                         'columns': table_desc.columns,
-                        'examples': table_desc.examples
+                        'examples': table_desc.examples if table_desc.examples else []
                     })
                 else:
                     table_comment, columns = db.get_table_info_by_table(table_name)
@@ -268,7 +268,7 @@ def dbqa_chat(request: Request,
         new_message_assistant.uid = req.answer_uid
         new_message_assistant.role = 'assistant'
         new_message_assistant.content = res['answer']
-        new_message_assistant.llm_name = res['model_name']
+        new_message_assistant.llm_name = req.model_name
         new_message_assistant.response = res
         mysql_db.add(new_message_assistant)
         try:
