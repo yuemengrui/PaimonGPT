@@ -38,6 +38,8 @@ class RdbmsSummary:
                 if i.get('is_deprecated', False):
                     continue
 
+                table_examples = i.get('examples', '')
+
                 col = []
                 for c in i['columns']:
                     if c.get('is_deprecated', False):
@@ -53,7 +55,7 @@ class RdbmsSummary:
                     table_str = f"表名:{i['table_name']} 表描述:{i['table_comment']} - 详细字段: [{col_str}]"
                     sentences.append(table_str)
                     tables.append(i['table_name'])
-                    self.table_description.update({i['table_name']: table_str})
+                    self.table_description.update({i['table_name']: [table_str, table_examples]})
 
             if len(tables) > 0:
                 try:
@@ -83,12 +85,12 @@ class RdbmsSummary:
                 table_scores.sort(key=lambda x: x[1], reverse=True)
                 related_tables = [x[0] for x in table_scores[:limit]]
 
-                return '\n'.join([self.table_description[t] for t in related_tables])
+                return '\n'.join([self.table_description[t][0] for t in related_tables]), '\n'.join([self.table_description[t][1] for t in related_tables])
         else:
             if len(self.table_description) > 0:
-                return '\n'.join(list(self.table_description.values()))
+                return '\n'.join([v[0] for v in self.table_description.values()]), '\n'.join([v[1] for v in self.table_description.values()])
 
-        return self.table_summaries()
+        return self.table_summaries(), ''
 
     def get_table_summary(self, table_name):
         """Get table summary for table.

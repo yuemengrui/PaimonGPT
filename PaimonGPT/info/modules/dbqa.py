@@ -79,7 +79,8 @@ def db_connect(request: Request,
                         'table_name': table_name,
                         'table_comment': table_desc.table_comment,
                         'is_deprecated': table_desc.is_deprecated,
-                        'columns': table_desc.columns
+                        'columns': table_desc.columns,
+                        'examples': table_desc.examples
                     })
                 else:
                     table_comment, columns = db.get_table_info_by_table(table_name)
@@ -87,7 +88,8 @@ def db_connect(request: Request,
                         'table_name': table_name,
                         'table_comment': table_comment,
                         'is_deprecated': False,
-                        'columns': columns
+                        'columns': columns,
+                        'examples': []
                     })
         else:
             for table_name in db.tables:
@@ -96,7 +98,8 @@ def db_connect(request: Request,
                     'table_name': table_name,
                     'table_comment': table_comment,
                     'is_deprecated': False,
-                    'columns': columns
+                    'columns': columns,
+                    'examples': []
                 })
             new_chat = ChatRecord()
             new_chat.app_id = req.app_id
@@ -276,12 +279,12 @@ def dbqa_chat(request: Request,
 
     try:
         db_cls = DBs[req.db_name]
-        table_info = db_cls.get_related_table_summaries(req.prompt)
+        table_info, table_examples = db_cls.get_related_table_summaries(req.prompt)
     except Exception as e:
         logger.error({'EXCEPTION': e})
         return StreamingResponse(error_stream_generate(''), media_type="text/event-stream")
 
-    prompt = DBQA_PROMPT_TEMPLATE.format(top_k=10, query=req.prompt, table_info=table_info)
+    prompt = DBQA_PROMPT_TEMPLATE.format(top_k=10, examples=table_examples, query=req.prompt, table_info=table_info)
     logger.info(f"prompt: {prompt}")
 
     resp = servers_llm_chat(prompt=prompt,

@@ -69,6 +69,8 @@ DBQA_PROMPT_TEMPLATE = """你是一个 SQL 专家，给你一个用户的问题�
 5. 不要返回你的思考过程，直接返回sql语句。使用 json 格式回答，确保你的回答是必须是正确的 json 格式，并且能被 python 语言的 `json.loads` 库解析, 格式如下：
 {{"sql": "你生成的sql"}} 
 
+这是几个示例：{examples}
+
 用户的问题是：{query}
 已知表结构信息如下：
 {table_info}"""
