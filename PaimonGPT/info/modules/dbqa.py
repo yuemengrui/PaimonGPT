@@ -208,7 +208,8 @@ def get_db_table_data(request: Request,
                       ):
     logger.info(str(req.dict()) + ' user_id: {}'.format(user_id))
 
-    sql = f"select * from {req.table_name} where id >= (select id from {req.table_name} order by id limit {int((req.page - 1) * req.page_size)}, 1) limit {req.page_size};"
+    # sql = f"select * from {req.table_name} where id >= (select id from {req.table_name} order by id limit {int((req.page - 1) * req.page_size)}, 1) limit {req.page_size};"
+    sql = f"select * from {req.table_name} limit {int((req.page - 1) * req.page_size)}, {req.page_size};"
 
     logger.info({'sql': sql})
 
@@ -222,7 +223,9 @@ def get_db_table_data(request: Request,
     resp = []
     if len(db_res) > 1:
         resp.extend([dict(
-            zip(db_res[0], [x.strftime('%Y-%m-%d %H:%M:%S') if isinstance(x, datetime.datetime) else x for x in i])) for
+            zip(db_res[0],
+                [x.strftime('%Y-%m-%d %H:%M:%S') if isinstance(x, (datetime.datetime, datetime.date)) else x for x in
+                 i])) for
             i in db_res[1:]])
 
     return JSONResponse({'data': resp})
