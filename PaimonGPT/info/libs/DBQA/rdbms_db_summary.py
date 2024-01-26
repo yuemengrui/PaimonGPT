@@ -85,10 +85,10 @@ class RdbmsSummary:
                 table_scores.sort(key=lambda x: x[1], reverse=True)
                 related_tables = [x[0] for x in table_scores[:limit]]
 
-                return '\n'.join([self.table_description[t][0] for t in related_tables]), '\n'.join([self.table_description[t][1] for t in related_tables])
+                return '\n'.join([self.table_description[t][0] for t in related_tables]), '\n'.join([self.table_description[t][1] if self.table_description[t][1] is not None else '' for t in related_tables])
         else:
             if len(self.table_description) > 0:
-                return '\n'.join([v[0] for v in self.table_description.values()]), '\n'.join([v[1] for v in self.table_description.values()])
+                return '\n'.join([v[0] for v in self.table_description.values()]), '\n'.join([v[1] if v[1] is not None else '' for v in self.table_description.values()])
 
         return self.table_summaries(), ''
 
