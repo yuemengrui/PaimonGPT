@@ -204,7 +204,7 @@ class KBFileChunks(Base, BaseModel):
     type = Column(String(16), nullable=False)  # text, table, figure
     page = Column(String(16))
     content = Column(TEXT)
-    content_hash = Column(String(64))
+    children = Column(JSON)
     url = Column(String(512), comment="图片url")
     html = Column(TEXT)
 

@@ -23,6 +23,8 @@ LOADER_MAPPING = {
 
 def load_file(filepath, ext=None, pdf=False, embedding_model=None):
     logger.info({'load_file': {'file_path': filepath, 'ext': ext}})
+
+    textsplitter = ChineseTextSplitter(pdf=pdf)
     if not ext:
         ext = filepath.lower().split('.')[-1]
 
@@ -37,8 +39,7 @@ def load_file(filepath, ext=None, pdf=False, embedding_model=None):
             logger.warning({'Unsupported file extension': '{}'.format(ext)})
             loader = UnstructuredFileLoader(filepath, mode="elements")
 
-        textsplitter = ChineseTextSplitter(pdf=pdf)
         docs = loader.load_and_split(text_splitter=textsplitter)
         docs = [{'type': 'text', 'content': x.page_content, 'page': None} for x in docs]
 
-    return docs
+    return docs, textsplitter

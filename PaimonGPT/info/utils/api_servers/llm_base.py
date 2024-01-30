@@ -27,7 +27,13 @@ def servers_token_count(prompt: str, model_name: str):
         "prompt": prompt
     }
 
-    return requests.post(url=LLM_Models[model_name]['url_prefix'] + LLM_SERVER_APIS['token_counter'], json=req_data)
+    try:
+        response = requests.post(url=LLM_Models[model_name]['url_prefix'] + LLM_SERVER_APIS['token_counter'],
+                                 json=req_data)
+        return response.json()
+    except Exception as e:
+        logger.error({'EXCEPTION': e})
+        return {}
 
 
 def servers_embedding_text(sentences: List[str], model_name: str):

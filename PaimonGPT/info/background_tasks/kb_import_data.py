@@ -27,54 +27,54 @@ def auto_chunk(req, mysql_db, embedding_model):
                 f"background task: {fil.file_hash} import failed: file local path {local_file_path} not exist")
             continue
         file_ext = fil.file_name.lower().split('.')[-1]
-        docs = load_file(filepath=local_file_path, ext=file_ext, embedding_model=embedding_model)
+        docs, text_spliter = load_file(filepath=local_file_path, ext=file_ext, embedding_model=embedding_model)
         logger.info(f"background task: {docs}")
 
-        sentences = []
-        sentences_hash = []
+        emb_sentences = []
+        emb_sentences_hash = []
         total = len(docs)
         for chunk in docs:
-            chunk.update({'sentence_hash': None})
+            """
+            chunk: {'type': 'text', 'content': 'xxx', 'page': None}
+            """
+            chunk.update({'children': None})
             if chunk['type'] == 'text':
-                sen_hash = md5hex(chunk['content'].encode('utf-8'))
-                if sen_hash != '':
-                    chunk.update({'sentence_hash': sen_hash})
-                    sentences.append(chunk['content'])
-                    sentences_hash.append(sen_hash)
+                children_list = text_spliter.split_text(chunk['content'])
+                children = []
+                for child in children_list:
+                    child_hash = md5hex(child.encode('utf-8'))
+                    if child_hash != '':
+                        children.append({'text': child, 'text_hash': child_hash})
+                        emb_sentences.append(child)
+                        emb_sentences_hash.append(child_hash)
+
+                chunk.update({'children': children})
             elif chunk['type'] == 'table':
-                if len(chunk['table_caption']) > 0:
-                    sen_hash = md5hex(chunk['table_caption'].encode('utf-8'))
-                    if sen_hash != '':
-                        chunk.update({'sentence_hash': sen_hash})
-                        sentences.append(chunk['table_caption'])
-                        sentences_hash.append(sen_hash)
+                # TODO table handle
+
                 chunk.update(
                     {'url': upload_file(cv2_to_bytes(chunk['image']), str(time.time() * 1000000) + '.jpg')})
             elif chunk['type'] == 'figure':
-                if len(chunk['figure_caption']) > 0:
-                    sen_hash = md5hex(chunk['figure_caption'].encode('utf-8'))
-                    if sen_hash != '':
-                        chunk.update({'sentence_hash': sen_hash})
-                        sentences.append(chunk['figure_caption'])
-                        sentences_hash.append(sen_hash)
+                # TODO figure handle
+
                 chunk.update(
                     {'url': upload_file(cv2_to_bytes(chunk['image']), str(time.time() * 1000000) + '.jpg')})
 
         logger.info(f'background task: insert into milvus start......')
 
-        embedding_resp = servers_embedding_text(sentences=sentences, model_name=embedding_model)
+        embedding_resp = servers_embedding_text(sentences=emb_sentences, model_name=embedding_model)
 
         embeddings = embedding_resp.json()['embeddings']
 
         start = 0
         inert_failed = 0
         while True:
-            if start > len(sentences):
+            if start > len(emb_sentences):
                 break
 
             if not milvus_db.upsert_data(collection_name=embedding_model,
-                                         texts=sentences[start:start + 100],
-                                         text_hashs=sentences_hash[start:start + 100],
+                                         texts=emb_sentences[start:start + 100],
+                                         text_hashs=emb_sentences_hash[start:start + 100],
                                          embeddings=embeddings[start:start + 100]):
                 logger.error(f"background task: {fil.file_hash} import failed: milvus insert data failed!!!")
                 inert_failed = 1
@@ -95,17 +95,17 @@ def auto_chunk(req, mysql_db, embedding_model):
         new_kb_file.file_type = fil.file_type
         new_kb_file.file_size = fil.file_size
         new_kb_file.file_url = fil.file_url
-        new_kb_file.data_total = total
+        new_kb_file.chunk_total = total
         mysql_db.add(new_kb_file)
         mysql_db.flush()
-        data_id = new_kb_file.id
+        file_id = new_kb_file.id
 
         kb_data_detail_list = []
         for c in docs:
             new_chunk = KBFileChunks()
             new_chunk.page = c['page']
-            new_chunk.data_id = data_id
-            new_chunk.content_hash = c['sentence_hash']
+            new_chunk.file_id = file_id
+            new_chunk.children = c['children']
 
             if c['type'] == 'text':
                 new_chunk.type = 'text'

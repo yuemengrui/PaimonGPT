@@ -1,35 +1,17 @@
 # *_*coding:utf-8 *_*
 # @Author : YueMengRui
-import re
-import json
+import time
 from mylogger import logger
 from info import milvus_db
 from info.utils.common import paser_str_to_json
+from info.utils.kb.rrf import reciprocal_rank_fusion
 from info.utils.api_servers.llm_base import servers_llm_chat, servers_embedding_text
 from configs.prompt_template import multiqueryretriever_prompt_template
 
 
-def reciprocal_rank_fusion(docs, weights, k=60, score_threshold=0.01):
-    rerank_docs = {}
-
-    for i in range(len(weights)):
-        for rank, doc in enumerate(docs[i]):
-
-            if doc['text_hash'] not in rerank_docs:
-                doc.update({'score': 0})
-                rerank_docs[doc['text_hash']] = doc
-
-            rerank_docs[doc['text_hash']]['score'] += weights[i] * (1 / (rank + k))
-
-    related_docs = list(rerank_docs.values())
-
-    related_docs.sort(key=lambda x: x['score'], reverse=True)
-    logger.info(f"multiquery_retriever: related docs: {related_docs}")
-
-    return [x for x in related_docs if x['score'] > score_threshold]
-
-
 def multiquery_retriever(query, llm_name, embedding_model, text_hash_list):
+    time_cost = {}
+    t1 = time.time()
     queries = [query]
     resp = servers_llm_chat(prompt=multiqueryretriever_prompt_template.format(query=query), model_name=llm_name)
     logger.info(f"multiquery_retriever: {resp}")
@@ -44,6 +26,9 @@ def multiquery_retriever(query, llm_name, embedding_model, text_hash_list):
             if isinstance(i, str) and (i not in queries):
                 queries.append(i)
 
+    t2 = time.time()
+    time_cost.update({'multiquery_generate': f"{t2 - t1:.3f}s"})
+
     weight = 1 / (len(queries) + 1)
     weights = [weight] * len(queries)
     weights[0] = (2 * weight)
@@ -57,26 +42,15 @@ def multiquery_retriever(query, llm_name, embedding_model, text_hash_list):
 
     embeddings = servers_embedding_text(sentences=sentences, model_name=embedding_model).json()['embeddings']
 
-    docs = []
+    texts = []
     for i in range(len(embeddings)):
-        docs.append(milvus_db.similarity_search(embedding_model, embeddings[i], expr=f"text_hash in {text_hash_list}"))
+        texts.append(milvus_db.similarity_search(embedding_model, embeddings[i], expr=f"text_hash in {text_hash_list}"))
 
-    related_docs = reciprocal_rank_fusion(docs, weights)
+    t3 = time.time()
+    time_cost.update({'multiquery_retrieve': f"{t3 - t2:.3f}s"})
+    related_texts = reciprocal_rank_fusion(texts, weights)
 
-    logger.info(f"multiquery_retriever: related docs: {related_docs}")
-    front = []
-    back = []
-    flag = 'front'
+    logger.info(f"multiquery_retriever: related texts: {related_texts}")
 
-    for doc in related_docs:
-        if flag == 'front':
-            front.append(doc['text'])
-            flag = 'back'
-        else:
-            back.insert(0, doc['text'])
-            flag = 'front'
-
-    context = '\n'.join(front + back)
-    logger.info(f"multiquery_retriever: context: {context}")
-
-    return queries, related_docs, context
+    time_cost.update({'total': f"{time.time() - t1:.3f}s"})
+    return queries, related_texts, time_cost

@@ -5,6 +5,7 @@ import math
 import requests
 import numpy as np
 from typing import List
+from mylogger import logger
 from configs import TOKENIZE_APIS
 
 
@@ -110,22 +111,26 @@ class BM25Retriever:
         except Exception as e:
             return []
 
-    def search(self, query: str, docs: List[str], k=10, **kwargs):
+    def search(self, query: str, texts: List[str], text_hash: List[str], k=10, **kwargs):
+        time_cost = {'total': '0s'}
         start = time.time()
-        corpus = self.word_seg(docs)
+        corpus = self.word_seg(texts)
         if len(corpus) == 0:
-            return [], time.time() - start
+            return [], time_cost
 
         query_seg = self.word_seg([query], return_completion=True)
         if len(query_seg) == 0:
-            return [], time.time() - start
+            return [], time_cost
 
         query_seg = query_seg[0]
 
         top_n_index, scores = self.bm25.get_top_k(query=query_seg, corpus=corpus, k=k)
 
-        related_docs = []
+        related_texts = []
         for i in range(len(top_n_index)):
-            related_docs.append({'text': docs[top_n_index[i]], 'score': scores[i]})
+            related_texts.append(
+                {'text': texts[top_n_index[i]], 'text_hash': text_hash[top_n_index[i]], 'score': scores[i]})
 
-        return related_docs, time.time() - start
+        logger.info(f"bm25_retriever: related texts: {related_texts}")
+        time_cost.update({'total': f"{time.time() - start:.3f}s"})
+        return related_texts, time_cost

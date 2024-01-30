@@ -45,11 +45,13 @@ class PDFLayoutLoader:
             logger.error({'EXCEPTION': e})
             return []
 
-    def embedding_token_count(self, sentences: List, embedding_model: str):
-
+    def embedding_token_count(self, sentences: List, embedding_model: str = None):
+        if embedding_model is None:
+            return None
         try:
-            res = requests.post(url=Embedding_Models[embedding_model]['url_prefix'] + EMBEDDING_SERVER_APIS['embedding_token_count'],
-                                json={'model_name': embedding_model, 'sentences': sentences})
+            res = requests.post(
+                url=Embedding_Models[embedding_model]['url_prefix'] + EMBEDDING_SERVER_APIS['embedding_token_count'],
+                json={'model_name': embedding_model, 'sentences': sentences})
             return res.json()['token_counts'], res.json()['max_seq_length']
         except Exception as e:
             print({'EXCEPTION': e})
@@ -63,7 +65,7 @@ class PDFLayoutLoader:
 
         return text
 
-    def split_content(self, content_list: List, embedding_model: str, overlap: int = 1):
+    def split_content(self, content_list: List, embedding_model: str = None, overlap: int = 1):
         chunks = []
         line_list = []
         for cont in content_list:
@@ -90,7 +92,7 @@ class PDFLayoutLoader:
 
         return chunks
 
-    def merge_content(self, data: List, embedding_model: str):
+    def merge_content(self, data: List, embedding_model: str = None):
         """
         :param data: [['type', 'text', 'page']]
         :return:
@@ -155,7 +157,7 @@ class PDFLayoutLoader:
 
         return all_pages
 
-    def merge_chunks(self, docs, embedding_model: str):
+    def merge_chunks(self, docs, embedding_model: str = None):
         """
         :param docs:
         :param split:
@@ -209,7 +211,7 @@ class PDFLayoutLoader:
 
         return chunks
 
-    def load(self, pdf_path: str, embedding_model: str):
+    def load(self, pdf_path: str, embedding_model: str = None):
         """
         :param pdf_path:
         :return: [{'page': 0, 'chunks': [
