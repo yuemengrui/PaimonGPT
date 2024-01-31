@@ -237,3 +237,5 @@ class DBChatRequest(BaseModel):
     prompt: str
     history: List = Field(default=[], description="历史记录")
     generation_configs: Dict = {}
+    limit: int = Field(default=5)
+    threshold: Union[int, float] = Field(default=None)
