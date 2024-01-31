@@ -131,6 +131,6 @@ class BM25Retriever:
             related_texts.append(
                 {'text': texts[top_n_index[i]], 'text_hash': text_hash[top_n_index[i]], 'score': scores[i]})
 
-        logger.info(f"bm25_retriever: related texts: {related_texts}")
+        logger.info({"bm25_retriever_related_texts": related_texts})
         time_cost.update({'total': f"{time.time() - start:.3f}s"})
         return related_texts, time_cost

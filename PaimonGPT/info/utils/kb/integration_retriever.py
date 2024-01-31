@@ -32,7 +32,7 @@ def retrieve_data(query, file_chunks_map, chunk_children_map, chunk_id_content_m
     bm25_related_texts, bm25_time_cost = bm25_retriever.search(query, text_list, text_hash_list)
 
     rrf_related_texts = reciprocal_rank_fusion([multiquery_related_texts, bm25_related_texts])
-    logger.info(f"rrf_related texts: {rrf_related_texts}")
+    logger.info({"rrf_related texts": rrf_related_texts})
 
     msg = {'MultiQueryRetriever': {'queries': queries, 'time_cost': multiquery_time_cost},
            'BM25Retriever': {'time_cost': bm25_time_cost}}
@@ -50,7 +50,7 @@ def retrieve_data(query, file_chunks_map, chunk_children_map, chunk_id_content_m
     select_chunk_ids = []
     select_chunks = []
     # chunk token calc
-    token_count_resp = servers_token_count(prompt=kb_qa_prompt_template.format(query=query, content=''),
+    token_count_resp = servers_token_count(prompt=kb_qa_prompt_template.format(query=query, context=''),
                                            model_name=llm_name)
     base_prompt_token_len = token_count_resp.get('prompt_tokens')
     max_prompt_len = token_count_resp.get('max_tokens')
@@ -99,5 +99,7 @@ def retrieve_data(query, file_chunks_map, chunk_children_map, chunk_id_content_m
             temp_docs.update({file_info['file_hash']: file_info})
 
     related_docs = list(temp_docs.values())
+
+    logger.info({'related_docs': related_docs})
 
     return prompt, related_docs, msg

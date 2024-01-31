@@ -74,7 +74,7 @@ def llm_chat(request: Request,
                     res['time_cost'].update({'total': f"{time.time() - start:.3f}s"})
                     retrieval = {}
                     retrieval.update({'sources': related_docs})
-                    retrieval.update({'sources_len': sum([len(x['related_texts']) for x in related_docs])})
+                    retrieval.update({'sources_len': sum([len(x['related_content']) for x in related_docs])})
                     retrieval.update(msg)
                     res.update({'retrieval': retrieval})
                     yield f"data: {json.dumps(res, ensure_ascii=False)}\n\n"
@@ -107,6 +107,7 @@ def llm_chat(request: Request,
         resp['time_cost'].update({'total': f"{time.time() - start:.3f}s"})
         retrieval = {}
         retrieval.update({'sources': related_docs})
+        retrieval.update({'sources_len': sum([len(x['related_content']) for x in related_docs])})
         retrieval.update(msg)
         resp.update({'retrieval': retrieval})
 

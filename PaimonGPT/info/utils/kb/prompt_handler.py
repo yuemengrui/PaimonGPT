@@ -15,7 +15,7 @@ def get_kb_data(mysql_db, app_id):
     embedding_model = None
     llm_name = None
 
-    app = mysql_db.query(App).get(app_id)
+    app = mysql_db.query(App).filter(App.uid == app_id).first()
     app_kbs = mysql_db.query(App_KB).filter(App_KB.app_id == app_id).all()
     if app and app_kbs:
         llm_name = app.llm_name

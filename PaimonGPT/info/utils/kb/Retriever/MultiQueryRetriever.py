@@ -14,13 +14,13 @@ def multiquery_retriever(query, llm_name, embedding_model, text_hash_list):
     t1 = time.time()
     queries = [query]
     resp = servers_llm_chat(prompt=multiqueryretriever_prompt_template.format(query=query), model_name=llm_name)
-    logger.info(f"multiquery_retriever: {resp}")
+    logger.info({"multiquery_retriever": resp})
     resp_json_data = None
     if resp:
         resp_json_data = paser_str_to_json(resp)
 
     if resp_json_data:
-        logger.info(f"multiquery_retriever: json: {resp_json_data}")
+        logger.info({"multiquery_retriever_json": resp_json_data})
 
         for i in list(resp_json_data.values()):
             if isinstance(i, str) and (i not in queries):
@@ -32,8 +32,7 @@ def multiquery_retriever(query, llm_name, embedding_model, text_hash_list):
     weight = 1 / (len(queries) + 1)
     weights = [weight] * len(queries)
     weights[0] = (2 * weight)
-    logger.info(f"queries: {queries}")
-    logger.info(f"weights: {weights}")
+    logger.info({"queries": queries, "weights": weights})
 
     if embedding_model == 'bge_large_zh':
         sentences = ["为这个句子生成表示以用于检索相关文章：" + q for q in queries]
@@ -50,7 +49,7 @@ def multiquery_retriever(query, llm_name, embedding_model, text_hash_list):
     time_cost.update({'multiquery_retrieve': f"{t3 - t2:.3f}s"})
     related_texts = reciprocal_rank_fusion(texts, weights)
 
-    logger.info(f"multiquery_retriever: related texts: {related_texts}")
+    logger.info({"multiquery_retriever_related_texts": related_texts})
 
     time_cost.update({'total': f"{time.time() - t1:.3f}s"})
     return queries, related_texts, time_cost

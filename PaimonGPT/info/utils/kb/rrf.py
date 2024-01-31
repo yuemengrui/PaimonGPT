@@ -31,6 +31,5 @@ def reciprocal_rank_fusion(texts: List, weights: List = None, k=60, score_thresh
     related_texts = list(rerank_texts.values())
 
     related_texts.sort(key=lambda x: x['score'], reverse=True)
-    logger.info(f"rrf: related texts: {related_texts}")
 
     return [x for x in related_texts if x['score'] > score_threshold]
