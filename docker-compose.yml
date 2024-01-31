@@ -89,7 +89,7 @@ services:
 
   ocr_center:
     container_name: paimongpt_ocr_center
-    image: registry.cn-beijing.aliyuncs.com/yuemengrui/ocr_center:v4-0.6
+    image: registry.cn-beijing.aliyuncs.com/yuemengrui/ocr_center:v4-0.7
     command: [ "/bin/bash", "-c", "/root/workspace/OCR_Center/ai_server/docker_run.sh" ]
     ports:
       - "24666:24666"
@@ -187,6 +187,7 @@ services:
         condition: service_healthy
         restart: true
     volumes:
+      - ./DATA/FILE_SYSTEM:/workspace/PaimonGPT/file_system
       - ./PaimonGPT:/workspace/PaimonGPT
     ports:
       - "24600:24600"
