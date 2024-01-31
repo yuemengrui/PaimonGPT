@@ -113,7 +113,7 @@ def kb_data_detail(request: Request,
                    ):
     logger.info(str(req.dict()) + ' user_id: ' + str(user_id))
 
-    chunk_list = mysql_db.query(KBFileChunks).filter(KBFileChunks.data_id == req.data_id).all()
+    chunk_list = mysql_db.query(KBFileChunks).filter(KBFileChunks.file_id == req.file_id).all()
 
     return JSONResponse({'list': [x.to_dict() for x in chunk_list]})
 

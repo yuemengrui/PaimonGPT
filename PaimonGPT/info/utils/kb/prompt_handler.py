@@ -27,7 +27,7 @@ def get_kb_data(mysql_db, app_id):
                                                              KBFile.is_delete == False).all()
                 if kb_file_list:
                     for kb_file in kb_file_list:
-                        data_chunks = mysql_db.query(KBFileChunks).filter(KBFileChunks.data_id == kb_file.id).all()
+                        data_chunks = mysql_db.query(KBFileChunks).filter(KBFileChunks.file_id == kb_file.id).all()
                         if data_chunks:
                             for c in data_chunks:
                                 if c.type == 'text' and c.children is not None:

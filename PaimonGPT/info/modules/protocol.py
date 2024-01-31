@@ -171,7 +171,7 @@ class KBDataListRequest(BaseModel):
 
 
 class KBDataDetailRequest(BaseModel):
-    data_id: int
+    file_id: int
 
 
 class KBDataDeleteRequest(BaseModel):
