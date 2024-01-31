@@ -177,7 +177,7 @@ def app_delete(request: Request,
                ):
     logger.info(str(req.dict()) + ' user_id: ' + str(user_id))
 
-    mysql_db.query(App).filter(App.id == req.app_id, App.user_id == user_id).update({'is_delete': True})
+    mysql_db.query(App).filter(App.uid == req.app_id, App.user_id == user_id).update({'is_delete': True})
 
     try:
         mysql_db.commit()
