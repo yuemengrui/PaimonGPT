@@ -20,7 +20,7 @@ def get_kb_data(mysql_db, app_id):
     if app and app_kbs:
         llm_name = app.llm_name
         for app_kb in app_kbs:
-            kb = mysql_db.query(KB).get(app_kb.kb_id)
+            kb = mysql_db.query(KB).filter(KB.uid == app_kb.kb_id).first()
             if kb:
                 embedding_model = kb.embedding_model
                 kb_file_list = mysql_db.query(KBFile).filter(KBFile.kb_id == app_kb.kb_id,
