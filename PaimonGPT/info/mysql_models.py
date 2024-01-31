@@ -214,7 +214,6 @@ class KBFileChunks(Base, BaseModel):
             "type": self.type,
             "page": self.page,
             "content": self.content,
-            "content_hash": self.content_hash,
             "url": self.url,
             "html": self.html
         }
