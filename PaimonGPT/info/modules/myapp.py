@@ -153,7 +153,7 @@ def app_create(request: Request,
     if len(req.kbs) > 0:
         for kb in req.kbs:
             app_kb = App_KB()
-            app_kb.app_id = new_app.id
+            app_kb.app_id = new_app.uid
             app_kb.kb_id = kb['id']
             app_kb.kb_name = kb['name']
             mysql_db.add(app_kb)
