@@ -288,7 +288,7 @@ def dbqa_chat(request: Request,
         return StreamingResponse(error_stream_generate(''), media_type="text/event-stream")
 
     prompt = DBQA_PROMPT_TEMPLATE.format(top_k=10, examples=table_examples, query=req.prompt, table_info=table_info)
-    logger.info(f"prompt: {prompt}")
+    logger.info({"prompt": prompt})
 
     resp = servers_llm_chat(prompt=prompt,
                             model_name=req.model_name,

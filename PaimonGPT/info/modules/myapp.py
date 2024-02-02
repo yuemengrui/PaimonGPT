@@ -50,6 +50,7 @@ def get_app_info(request: Request,
                  mysql_db: Session = Depends(get_mysql_db),
                  user_id: int = Depends(verify_token)
                  ):
+    logger.info(req.dict())
     app_info = mysql_db.query(App).filter(App.uid == req.app_id, App.is_delete == False).first()
 
     if app_info is None:
@@ -75,6 +76,7 @@ def app_info_modify(request: Request,
                     mysql_db: Session = Depends(get_mysql_db),
                     user_id: int = Depends(verify_token)
                     ):
+    logger.info(req.dict())
     app_info = mysql_db.query(App).filter(App.uid == req.app_id, App.is_delete == False).first()
 
     if app_info is None:
@@ -111,6 +113,7 @@ def app_create(request: Request,
                mysql_db: Session = Depends(get_mysql_db),
                user_id: int = Depends(verify_token)
                ):
+    logger.info(req.dict())
     store_app = mysql_db.query(AppStore).filter(AppStore.uid == req.app_id).first()
     if not store_app:
         return JSONResponse(ErrorResponse(errcode=RET.DBERR, errmsg=error_map[RET.DBERR]).dict(), status_code=500)
@@ -142,6 +145,7 @@ def app_create(request: Request,
                mysql_db: Session = Depends(get_mysql_db),
                user_id: int = Depends(verify_token)
                ):
+    logger.info(req.dict())
     new_app = App()
     new_app.uid = snowflake.guid()
     new_app.user_id = user_id
@@ -196,6 +200,7 @@ def app_chat_list(request: Request,
                   mysql_db: Session = Depends(get_mysql_db),
                   user_id: int = Depends(verify_token)
                   ):
+    logger.info(req.dict())
     chat_list = mysql_db.query(ChatRecord).filter(ChatRecord.app_id == req.app_id,
                                                   ChatRecord.is_delete == False).order_by(
         ChatRecord.update_time.desc()).all()
@@ -210,6 +215,7 @@ def app_chat_create(request: Request,
                     mysql_db: Session = Depends(get_mysql_db),
                     user_id: int = Depends(verify_token)
                     ):
+    logger.info(req.dict())
     new_chat = ChatRecord()
     new_chat.app_id = req.app_id
     new_chat.name = req.name
@@ -253,6 +259,7 @@ def app_chat_message_list(request: Request,
                           mysql_db: Session = Depends(get_mysql_db),
                           user_id: int = Depends(verify_token)
                           ):
+    logger.info(req.dict())
     message_list = mysql_db.query(ChatMessageRecord).filter(ChatMessageRecord.chat_id == req.chat_id,
                                                             ChatMessageRecord.is_delete == False).order_by(
         ChatMessageRecord.id.desc()).offset((req.page_size * (req.page - 1))).limit(req.page_size)

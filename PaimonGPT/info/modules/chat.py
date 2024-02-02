@@ -55,7 +55,7 @@ def llm_chat(request: Request,
         return JSONResponse(ErrorResponse(errcode=RET.DBERR, errmsg=error_map[RET.DBERR]).dict(), status_code=500)
 
     prompt, related_docs, msg = get_final_prompt(req=req, app_id=req.app_id, mysql_db=mysql_db)
-    logger.info(f"prompt: {prompt}")
+    logger.info({"prompt": prompt})
     req_data = {
         "model_name": req.model_name,
         "prompt": prompt,
@@ -138,7 +138,7 @@ def count_token(request: Request,
                 req: TokenCountRequest,
                 user_id=Depends(verify_token)
                 ):
-    logger.info(str(req.dict()))
+    logger.info(req.dict())
 
     return JSONResponse(servers_token_count(**req.dict()).json())
 
@@ -150,7 +150,7 @@ def llm_chat_simple(request: Request,
                     user_id=Depends(verify_token)
                     ):
     start = time.time()
-    logger.info(str(req.dict()))
+    logger.info(req.dict())
 
     req_data = {
         "model_name": req.model_name,

@@ -35,7 +35,7 @@ def kb_create(request: Request,
               mysql_db: Session = Depends(get_mysql_db),
               user_id: int = Depends(verify_token)
               ):
-    logger.info(str(req.dict()))
+    logger.info(req.dict())
     new_kb = KB()
     new_kb.uid = snowflake.guid()
     new_kb.user_id = user_id
@@ -97,7 +97,7 @@ def kb_data_import(request: Request,
                    mysql_db: Session = Depends(get_mysql_db),
                    user_id: int = Depends(verify_token)
                    ):
-    logger.info(str(req.dict()))
+    logger.info(req.dict())
 
     background_tasks.add_task(import_data_2_kb, req, mysql_db)
 

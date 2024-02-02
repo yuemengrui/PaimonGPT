@@ -20,7 +20,7 @@ def auth(request: Request,
          req: AuthRequest,
          mysql_db: Session = Depends(get_mysql_db)
          ):
-    logger.info(str(req.dict()))
+    logger.info(req.dict())
 
     if req.username.lower() in USERNAME_FILTER:
         return JSONResponse(ErrorResponse(errcode=RET.DATAERR, errmsg=u'非法用户名').dict(), status_code=500)

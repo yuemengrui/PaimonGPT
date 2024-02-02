@@ -25,6 +25,6 @@ def text_embedding(request: Request,
                    req: EmbeddingRequest,
                    user_id=Depends(verify_token)
                    ):
-    logger.info(str(req.dict()))
+    logger.info(req.dict())
 
     return JSONResponse(servers_embedding_text(**req.dict()).json())

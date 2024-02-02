@@ -15,7 +15,7 @@ router = APIRouter()
 def model_register(request: Request,
                    req: ModelRegisterRequest
                    ):
-    logger.info(str(req.dict()))
+    logger.info(req.dict())
 
     if req.type == 'llm':
         if req.model_name in LLM_Models:
