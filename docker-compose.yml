@@ -177,7 +177,7 @@ services:
   paimongpt_server:
     container_name: paimongpt_server
     image: registry.cn-beijing.aliyuncs.com/yuemengrui/ai:py311-ubuntu20.04-0.1
-#    image: registry.cn-beijing.aliyuncs.com/yuemengrui/ai:pytorch2.0.1-cuda11.8-cudnn8-ubuntu20.04-py311-v0.1
+    #    image: registry.cn-beijing.aliyuncs.com/yuemengrui/ai:pytorch2.0.1-cuda11.8-cudnn8-ubuntu20.04-py311-v0.1
     command: [ "/bin/bash", "-c", "/workspace/PaimonGPT/docker_run.sh" ]
     depends_on:
       db:
@@ -259,6 +259,109 @@ services:
     tty: true
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:24620/ai/health" ]
+      interval: 60s
+      start_period: 120s
+      timeout: 10s
+      retries: 5
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: [ "1" ]
+              capabilities: [ gpu ]
+
+
+  qwen_7b_server:
+    container_name: paimongpt_qwen_7b_server
+    image: registry.cn-beijing.aliyuncs.com/yuemengrui/ai:pytorch2.0.1-cuda11.8-cudnn8-ubuntu20.04-py311-v0.2
+    command: [ "/bin/bash", "-c", "/workspace/LLM_Server_Qwen/docker_run.sh" ]
+    depends_on:
+      paimongpt_server:
+        condition: service_healthy
+        restart: true
+    volumes:
+      - ./LLM_Server_Qwen/LLM_Server_Qwen:/workspace/LLM_Server_Qwen
+      - ./LLM_Server_Qwen/LLM_Server_Qwen/configs/configs_7b.py:/workspace/LLM_Server_Qwen/configs/config.py
+      - ./DATA/Models/Qwen1.5-7B-Chat:/workspace/Models/Qwen1.5-7B-Chat
+    ports:
+      - "24621:24621"
+    restart: unless-stopped
+    networks:
+      - paimongptnet
+    shm_size: "4gb"
+    stdin_open: true
+    tty: true
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:24621/ai/health" ]
+      interval: 60s
+      start_period: 120s
+      timeout: 10s
+      retries: 5
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: [ "1" ]
+              capabilities: [ gpu ]
+
+  qwen_14b_server:
+    container_name: paimongpt_qwen_14b_server
+    image: registry.cn-beijing.aliyuncs.com/yuemengrui/ai:pytorch2.0.1-cuda11.8-cudnn8-ubuntu20.04-py311-v0.2
+    command: [ "/bin/bash", "-c", "/workspace/LLM_Server_Qwen/docker_run.sh" ]
+    depends_on:
+      paimongpt_server:
+        condition: service_healthy
+        restart: true
+    volumes:
+      - ./LLM_Server_Qwen/LLM_Server_Qwen:/workspace/LLM_Server_Qwen
+      - ./LLM_Server_Qwen/LLM_Server_Qwen/configs/configs_14b.py:/workspace/LLM_Server_Qwen/configs/config.py
+      - ./DATA/Models/Qwen1.5-14B-Chat:/workspace/Models/Qwen1.5-14B-Chat
+    ports:
+      - "24622:24622"
+    restart: unless-stopped
+    networks:
+      - paimongptnet
+    shm_size: "4gb"
+    stdin_open: true
+    tty: true
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:24622/ai/health" ]
+      interval: 60s
+      start_period: 120s
+      timeout: 10s
+      retries: 5
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: [ "1" ]
+              capabilities: [ gpu ]
+
+  qwen_72b_server:
+    container_name: paimongpt_qwen_72b_server
+    image: registry.cn-beijing.aliyuncs.com/yuemengrui/ai:pytorch2.0.1-cuda11.8-cudnn8-ubuntu20.04-py311-v0.2
+    command: [ "/bin/bash", "-c", "/workspace/LLM_Server_Qwen/docker_run.sh" ]
+    depends_on:
+      paimongpt_server:
+        condition: service_healthy
+        restart: true
+    volumes:
+      - ./LLM_Server_Qwen/LLM_Server_Qwen:/workspace/LLM_Server_Qwen
+      - ./LLM_Server_Qwen/LLM_Server_Qwen/configs/configs_72b.py:/workspace/LLM_Server_Qwen/configs/config.py
+      - ./DATA/Models/Qwen1.5-72B-Chat:/workspace/Models/Qwen1.5-72B-Chat
+    ports:
+      - "24623:24623"
+    restart: unless-stopped
+    networks:
+      - paimongptnet
+    shm_size: "4gb"
+    stdin_open: true
+    tty: true
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:24623/ai/health" ]
       interval: 60s
       start_period: 120s
       timeout: 10s
