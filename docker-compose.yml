@@ -282,7 +282,7 @@ services:
         restart: true
     volumes:
       - ./LLM_Server_Qwen/LLM_Server_Qwen:/workspace/LLM_Server_Qwen
-      - ./LLM_Server_Qwen/LLM_Server_Qwen/configs/configs_7b.py:/workspace/LLM_Server_Qwen/configs/config.py
+      - ./LLM_Server_Qwen/LLM_Server_Qwen/configs/configs_7b.py:/workspace/LLM_Server_Qwen/configs/configs.py
       - ./DATA/Models/Qwen1.5-7B-Chat:/workspace/Models/Qwen1.5-7B-Chat
     ports:
       - "24621:24621"
@@ -316,7 +316,7 @@ services:
         restart: true
     volumes:
       - ./LLM_Server_Qwen/LLM_Server_Qwen:/workspace/LLM_Server_Qwen
-      - ./LLM_Server_Qwen/LLM_Server_Qwen/configs/configs_14b.py:/workspace/LLM_Server_Qwen/configs/config.py
+      - ./LLM_Server_Qwen/LLM_Server_Qwen/configs/configs_14b.py:/workspace/LLM_Server_Qwen/configs/configs.py
       - ./DATA/Models/Qwen1.5-14B-Chat:/workspace/Models/Qwen1.5-14B-Chat
     ports:
       - "24622:24622"
@@ -350,7 +350,7 @@ services:
         restart: true
     volumes:
       - ./LLM_Server_Qwen/LLM_Server_Qwen:/workspace/LLM_Server_Qwen
-      - ./LLM_Server_Qwen/LLM_Server_Qwen/configs/configs_72b.py:/workspace/LLM_Server_Qwen/configs/config.py
+      - ./LLM_Server_Qwen/LLM_Server_Qwen/configs/configs_72b.py:/workspace/LLM_Server_Qwen/configs/configs.py
       - ./DATA/Models/Qwen1.5-72B-Chat:/workspace/Models/Qwen1.5-72B-Chat
     ports:
       - "24623:24623"
