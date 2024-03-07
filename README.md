@@ -69,13 +69,34 @@ git clone https://github.com/yuemengrui/Embedding_Server.git
 git clone https://github.com/yuemengrui/AI_Tools_Servers.git
 ```
    
-6. 拉取 大模型-baichuan 源代码  
+6. 拉取 大模型部署服务 源代码  
 ```commandline
-git clone https://github.com/yuemengrui/LLM_Server_Baichuan.git
+git clone https://github.com/yuemengrui/LMCenter.git
+```
+在LMCenter/ModelWorker/configs/目录下创建一个新的配置文件，例如baichuan2_13b_configs.py, 可从configs.py.template复制一份，修改相关配置项, 只需修改ModelWorkerConfig中的部分配置项即可
+```commandline
+########################
+
+ModelWorkerConfig = {
+    "controller_addr": "http://model_controller:24620",  // controller地址
+    "worker_addr": f"http://xxx:{FASTAPI_PORT}", // worker地址，将xxx替换为你的容器名
+    "worker_id": WORKER_ID,
+    "worker_type": "",  # vllm or others // worker类型，可以选择是否启用vllm
+    "model_type": "xx",  # ['Baichuan', 'ChatGLM3', 'Qwen2']  // 支持的模型类型
+    "model_path": "xxx",  // 模型路径，为上面docker-compose.yml中挂载的模型文件夹, 例如：/workspace/Models/Baichuan2-13B-Chat
+    "model_name": "xxx",  // 模型名
+    "limit_worker_concurrency": 5,
+    "multimodal": False,  // 是否是多模态模型
+    "device": "cuda",
+    "dtype": "float16",  # ["float32", "float16", "bfloat16"], // 模型精度，推荐bfloat16
+    "gpu_memory_utilization": 0.9
+}
+
+
+########################
 ```
 ![image](https://github.com/yuemengrui/PaimonGPT/blob/main/assets/images/deploy_1.png?raw=true)
-说明：DATA目录为存放项目一些使用数据的目录，其中的DATA/Models目录存放项目用到的models。  
-Baichuan2_13B为存放baichuan模型的文件夹，必需为“Baichuan2_13B”这个文件夹名，因为在代码中读取模型路径就是这个文件夹名，如果你不喜欢这个文件夹名，可以在代码中改成你喜欢的任何名字。其他模型文件夹名同样需要和代码中匹配。  
+说明：DATA目录为存放项目一些使用数据的目录，其中的DATA/Models目录存放项目用到的models。   
 我将分词模型放在了[谷歌云盘](https://drive.google.com/file/d/1SBYephGXV20bpDG3XQ3lp7SEW_XgWlHq/view?usp=share_link)上，需要的可以自行下载。  
 ![image](https://github.com/yuemengrui/PaimonGPT/blob/main/assets/images/deploy_2.png?raw=true)
 
@@ -95,7 +116,6 @@ deploy:
 ```
 
 在一些需要使用GPU的服务中会有上面这个GPU的配置。
-默认的话，大模型单独1号卡，其他所有模型0号卡。
 其他模型包括：OCR、版面分析模型、分词模型、bge embedding模型，这些模型加起来大概8G显存
 
 如果你是docker大佬，也可以随意修改你想修改的地方
@@ -119,5 +139,5 @@ sudo docker compose ps
 - [AI_Tokenizer_Server](https://github.com/yuemengrui/AI_Tokenizer_Server.git) 分词服务，主要用于分词。
 - [AI_Tools_Servers](https://github.com/yuemengrui/AI_Tools_Servers.git) 其实是一些工具类的服务会放在这里，目前只放了一个版面分析的服务，未来可能会添加一些其他的服务。
 - [Embedding_Server](https://github.com/yuemengrui/Embedding_Server.git) 就是Embedding啦，都是用sentence_transformers加载的模型
-- [LLM_Server_Baichuan](https://github.com/yuemengrui/LLM_Server_Baichuan.git) baichuan的模型服务，如果需要用其他的模型，可以copy这个代码，将其中baichuan相关的部分改成你想要模型即可
+- [LMCenter](https://github.com/yuemengrui/LMCenter.git) 大模型部署的服务，主要用于部署大模型，提供大模型的服务。
 

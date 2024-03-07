@@ -176,8 +176,7 @@ services:
 
   paimongpt_server:
     container_name: paimongpt_server
-    image: registry.cn-beijing.aliyuncs.com/yuemengrui/ai:py311-ubuntu20.04-0.1
-    #    image: registry.cn-beijing.aliyuncs.com/yuemengrui/ai:pytorch2.0.1-cuda11.8-cudnn8-ubuntu20.04-py311-v0.1
+    image: registry.cn-beijing.aliyuncs.com/yuemengrui/ai:py311-ubuntu20.04-0.2
     command: [ "/bin/bash", "-c", "/workspace/PaimonGPT/docker_run.sh" ]
     depends_on:
       db:
@@ -238,52 +237,38 @@ services:
               device_ids: [ "0" ]
               capabilities: [ gpu ]
 
-  baichuan_server:
-    container_name: paimongpt_baichuan_server
-    image: registry.cn-beijing.aliyuncs.com/yuemengrui/ai:pytorch2.0.1-cuda11.8-cudnn8-ubuntu20.04-py311-v0.1
-    command: [ "/bin/bash", "-c", "/workspace/LLM_Server_Baichuan/docker_run.sh" ]
-    depends_on:
-      paimongpt_server:
-        condition: service_healthy
-        restart: true
+  model_controller:
+    container_name: paimongpt_model_controller
+    image: registry.cn-beijing.aliyuncs.com/yuemengrui/ai:py311-ubuntu20.04-0.2
+    command: [ "/bin/bash", "-c", "/workspace/ModelController/docker_run.sh" ]
     volumes:
-      - ./LLM_Server_Baichuan/LLM_Server_Baichuan:/workspace/LLM_Server_Baichuan
-      - ./DATA/Models:/workspace/Models
+      - ./LMCenter/ModelController:/workspace/ModelController
     ports:
       - "24620:24620"
     restart: unless-stopped
     networks:
       - paimongptnet
-    shm_size: "4gb"
     stdin_open: true
     tty: true
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:24620/ai/health" ]
       interval: 60s
-      start_period: 120s
+      start_period: 60s
       timeout: 10s
       retries: 5
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              device_ids: [ "1" ]
-              capabilities: [ gpu ]
 
-
-  qwen_7b_server:
-    container_name: paimongpt_qwen_7b_server
-    image: registry.cn-beijing.aliyuncs.com/yuemengrui/ai:pytorch2.0.1-cuda11.8-cudnn8-ubuntu20.04-py311-v0.2
-    command: [ "/bin/bash", "-c", "/workspace/LLM_Server_Qwen/docker_run.sh" ]
+  baichuan2_13b_server:
+    container_name: paimongpt_model_worker_baichuan2_13b_server
+    image: registry.cn-beijing.aliyuncs.com/yuemengrui/ai:pytorch2.1.2-cuda12.1-cudnn8-ubuntu20.04-py311-base
+    command: [ "/bin/bash", "-c", "/workspace/ModelWorker/docker_run.sh" ]
     depends_on:
-      paimongpt_server:
+      model_controller:
         condition: service_healthy
         restart: true
     volumes:
-      - ./LLM_Server_Qwen/LLM_Server_Qwen:/workspace/LLM_Server_Qwen
-      - ./LLM_Server_Qwen/LLM_Server_Qwen/configs/configs_7b.py:/workspace/LLM_Server_Qwen/configs/configs.py
-      - ./DATA/Models/Qwen1.5-7B-Chat:/workspace/Models/Qwen1.5-7B-Chat
+      - ./LMCenter/ModelWorker:/workspace/ModelWorker
+      - ./LMCenter/ModelWorker/configs/baichuan2_13b_configs.py:/workspace/ModelWorker/configs/configs.py
+      - ./DATA/Models/Baichuan2-13B-Chat:/workspace/Models/Baichuan2-13B-Chat
     ports:
       - "24621:24621"
     restart: unless-stopped
@@ -306,20 +291,20 @@ services:
               device_ids: [ "1" ]
               capabilities: [ gpu ]
 
-  qwen_14b_server:
-    container_name: paimongpt_qwen_14b_server
-    image: registry.cn-beijing.aliyuncs.com/yuemengrui/ai:pytorch2.0.1-cuda11.8-cudnn8-ubuntu20.04-py311-v0.2
-    command: [ "/bin/bash", "-c", "/workspace/LLM_Server_Qwen/docker_run.sh" ]
+  chatglm3_6b_32k_server:
+    container_name: paimongpt_model_worker_chatglm3_6b_32k_server
+    image: registry.cn-beijing.aliyuncs.com/yuemengrui/ai:pytorch2.1.2-cuda12.1-cudnn8-ubuntu20.04-py311-base
+    command: [ "/bin/bash", "-c", "/workspace/ModelWorker/docker_run.sh" ]
     depends_on:
-      paimongpt_server:
+      model_controller:
         condition: service_healthy
         restart: true
     volumes:
-      - ./LLM_Server_Qwen/LLM_Server_Qwen:/workspace/LLM_Server_Qwen
-      - ./LLM_Server_Qwen/LLM_Server_Qwen/configs/configs_14b.py:/workspace/LLM_Server_Qwen/configs/configs.py
-      - ./DATA/Models/Qwen1.5-14B-Chat:/workspace/Models/Qwen1.5-14B-Chat
+      - ./LMCenter/ModelWorker:/workspace/ModelWorker
+      - ./LMCenter/ModelWorker/configs/chatglm3_6b_configs.py:/workspace/ModelWorker/configs/configs.py
+      - ./DATA/Models/chatglm3_6b_32k:/workspace/Models/chatglm3_6b_32k
     ports:
-      - "24622:24622"
+      - "24622:24621"
     restart: unless-stopped
     networks:
       - paimongptnet
@@ -327,7 +312,7 @@ services:
     stdin_open: true
     tty: true
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:24622/ai/health" ]
+      test: [ "CMD", "curl", "-f", "http://localhost:24621/ai/health" ]
       interval: 60s
       start_period: 120s
       timeout: 10s
@@ -337,23 +322,24 @@ services:
         reservations:
           devices:
             - driver: nvidia
-              device_ids: [ "1" ]
+              device_ids: [ "2" ]
               capabilities: [ gpu ]
 
-  qwen_72b_server:
-    container_name: paimongpt_qwen_72b_server
-    image: registry.cn-beijing.aliyuncs.com/yuemengrui/ai:pytorch2.0.1-cuda11.8-cudnn8-ubuntu20.04-py311-v0.2
-    command: [ "/bin/bash", "-c", "/workspace/LLM_Server_Qwen/docker_run.sh" ]
+
+  qwen2_7b_server:
+    container_name: paimongpt_model_worker_qwen2_7b_server
+    image: registry.cn-beijing.aliyuncs.com/yuemengrui/ai:pytorch2.1.2-cuda12.1-cudnn8-ubuntu20.04-py311-base
+    command: [ "/bin/bash", "-c", "/workspace/ModelWorker/docker_run.sh" ]
     depends_on:
-      paimongpt_server:
+      model_controller:
         condition: service_healthy
         restart: true
     volumes:
-      - ./LLM_Server_Qwen/LLM_Server_Qwen:/workspace/LLM_Server_Qwen
-      - ./LLM_Server_Qwen/LLM_Server_Qwen/configs/configs_72b.py:/workspace/LLM_Server_Qwen/configs/configs.py
-      - ./DATA/Models/Qwen1.5-72B-Chat:/workspace/Models/Qwen1.5-72B-Chat
+      - ./LMCenter/ModelWorker:/workspace/ModelWorker
+      - ./LMCenter/ModelWorker/configs/qwen2_7b_configs.py:/workspace/ModelWorker/configs/configs.py
+      - ./DATA/Models/Qwen1.5-7B-Chat:/workspace/Models/Qwen1.5-7B-Chat
     ports:
-      - "24623:24623"
+      - "24623:24621"
     restart: unless-stopped
     networks:
       - paimongptnet
@@ -361,7 +347,7 @@ services:
     stdin_open: true
     tty: true
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:24623/ai/health" ]
+      test: [ "CMD", "curl", "-f", "http://localhost:24621/ai/health" ]
       interval: 60s
       start_period: 120s
       timeout: 10s
@@ -371,7 +357,7 @@ services:
         reservations:
           devices:
             - driver: nvidia
-              device_ids: [ "1" ]
+              device_ids: [ "3" ]
               capabilities: [ gpu ]
 
 

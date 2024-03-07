@@ -14,9 +14,11 @@ TOKENIZE_APIS = {
 }
 ########################
 # LLM Configs
+LLM_SERVER_PREFIX = 'http://paimongpt_model_controller:24620'
 LLM_SERVER_APIS = {
     'token_counter': '/ai/llm/token_count',
     'chat': '/ai/llm/chat',
+    'model_list': '/ai/llm/list',
 }
 ########################
 

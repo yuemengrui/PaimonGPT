@@ -7,8 +7,8 @@ import requests
 from sqlalchemy.orm import Session
 from fastapi import APIRouter, Request, Depends
 from info.utils.Authentication import verify_token
-from info import logger, limiter, DBs, LLM_Models, Embedding_Models, get_mysql_db
-from configs import API_LIMIT, DBQA_PRESETS, LLM_SERVER_APIS
+from info import logger, limiter, DBs, Embedding_Models, get_mysql_db
+from configs import API_LIMIT, DBQA_PRESETS, LLM_SERVER_APIS, LLM_SERVER_PREFIX
 from configs.prompt_template import DBQA_PROMPT_TEMPLATE
 from .protocol import DBConnectRequest, ErrorResponse, DBChatRequest, DBTableDataQueryRequest, DBDisconnectRequest, \
     DBTableDescriptionRequest
@@ -330,7 +330,7 @@ def dbqa_chat(request: Request,
                 "generation_configs": req.generation_configs,
                 "stream": True
             }
-            resp = requests.post(url=LLM_Models[req.model_name]['url_prefix'] + LLM_SERVER_APIS['chat'], json=req_data,
+            resp = requests.post(url=LLM_SERVER_PREFIX + LLM_SERVER_APIS['chat'], json=req_data,
                                  stream=True)
 
             def stream_generate():

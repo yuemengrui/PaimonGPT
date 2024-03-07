@@ -6,8 +6,8 @@ import requests
 from sqlalchemy.orm import Session
 from fastapi import APIRouter, Request, Depends
 from info.utils.Authentication import verify_token
-from info import logger, limiter, get_mysql_db, LLM_Models
-from configs import API_LIMIT, LLM_SERVER_APIS
+from info import logger, limiter, get_mysql_db
+from configs import API_LIMIT, LLM_SERVER_APIS, LLM_SERVER_PREFIX
 from .protocol import ChatRequest, TokenCountRequest, ErrorResponse, ChatSimpleRequest
 from fastapi.responses import JSONResponse, StreamingResponse
 from info.mysql_models import ChatMessageRecord, ChatRecord
@@ -20,10 +20,11 @@ router = APIRouter()
 
 @router.api_route(path='/ai/llm/list', methods=['GET'], summary="获取支持的llm列表")
 @limiter.limit(API_LIMIT['model_list'])
-def support_llm_list(request: Request,
-                     user_id=Depends(verify_token)
-                     ):
-    return JSONResponse({'data': [{'model_name': k, **v['info']} for k, v in LLM_Models.items()]})
+async def support_llm_list(request: Request,
+                           user_id=Depends(verify_token)
+                           ):
+    resp = await requests.get(url=LLM_SERVER_PREFIX + LLM_SERVER_APIS['model_list'])
+    return JSONResponse(resp.json())
 
 
 @router.api_route('/ai/llm/chat', methods=['POST'], summary="Chat")
@@ -65,7 +66,7 @@ def llm_chat(request: Request,
     }
     if req.stream:
         req_data.update({"stream": True})
-        resp = requests.post(url=LLM_Models[req.model_name]['url_prefix'] + LLM_SERVER_APIS['chat'], json=req_data,
+        resp = requests.post(url=LLM_SERVER_PREFIX + LLM_SERVER_APIS['chat'], json=req_data,
                              stream=True)
         if 'event-stream' in resp.headers.get('content-type'):
             def stream_generate():
@@ -102,7 +103,7 @@ def llm_chat(request: Request,
             return JSONResponse(resp.json())
 
     else:
-        resp = requests.post(url=LLM_Models[req.model_name]['url_prefix'] + LLM_SERVER_APIS['chat'],
+        resp = requests.post(url=LLM_SERVER_PREFIX + LLM_SERVER_APIS['chat'],
                              json=req_data).json()
         resp['time_cost'].update({'total': f"{time.time() - start:.3f}s"})
         retrieval = {}
@@ -134,13 +135,13 @@ def llm_chat(request: Request,
 
 @router.api_route('/ai/llm/token_count', methods=['POST'], summary="token count")
 @limiter.limit(API_LIMIT['token_count'])
-def count_token(request: Request,
-                req: TokenCountRequest,
-                user_id=Depends(verify_token)
-                ):
+async def count_token(request: Request,
+                      req: TokenCountRequest,
+                      user_id=Depends(verify_token)
+                      ):
     logger.info(req.dict())
 
-    return JSONResponse(servers_token_count(**req.dict()).json())
+    return JSONResponse(await servers_token_count(**req.dict()).json())
 
 
 @router.api_route('/ai/llm/chat/simple', methods=['POST'], summary="Chat Simple")
@@ -161,8 +162,7 @@ def llm_chat_simple(request: Request,
     }
     if req.stream:
         req_data.update({"stream": True})
-        resp = requests.post(url=LLM_Models[req.model_name]['url_prefix'] + LLM_SERVER_APIS['chat'], json=req_data,
-                             stream=True)
+        resp = requests.post(url=LLM_SERVER_PREFIX + LLM_SERVER_APIS['chat'], json=req_data, stream=True)
         if 'event-stream' in resp.headers.get('content-type'):
             def stream_generate():
                 for line in resp.iter_content(chunk_size=None):
@@ -175,7 +175,7 @@ def llm_chat_simple(request: Request,
             return JSONResponse(resp.json())
 
     else:
-        resp = requests.post(url=LLM_Models[req.model_name]['url_prefix'] + LLM_SERVER_APIS['chat'],
+        resp = requests.post(url=LLM_SERVER_PREFIX + LLM_SERVER_APIS['chat'],
                              json=req_data).json()
         resp['time_cost'].update({'total': f"{time.time() - start:.3f}s"})
 

@@ -3,7 +3,7 @@
 from fastapi import APIRouter, Request, Depends
 from sqlalchemy.orm import Session
 from configs import API_LIMIT
-from info import logger, limiter, get_mysql_db, LLM_Models
+from info import logger, limiter, get_mysql_db
 from fastapi.responses import JSONResponse
 from info.utils.Authentication import verify_token
 from info.mysql_models import App, AppStore, ChatRecord, ChatMessageRecord, App_KB
@@ -122,7 +122,7 @@ def app_create(request: Request,
     new_app.uid = snowflake.guid()
     new_app.user_id = user_id
     new_app.name = store_app.name
-    new_app.llm_name = list(LLM_Models.keys())[0] if len(list(LLM_Models.keys())) > 0 else ''
+    new_app.llm_name = ''
     new_app.description = store_app.description
     new_app.is_appstore = True
     new_app.appstore_uid = req.app_id

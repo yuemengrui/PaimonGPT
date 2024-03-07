@@ -10,7 +10,7 @@ class ErrorResponse(BaseModel):
 
 
 class ModelRegisterRequest(BaseModel):
-    type: str = Literal['llm', 'embedding']
+    type: str = 'embedding'
     model_name: str
     url_prefix: str
     info: dict = Field(default={})

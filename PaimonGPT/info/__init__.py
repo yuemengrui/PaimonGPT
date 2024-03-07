@@ -22,7 +22,6 @@ Base.metadata.create_all(bind=engine)
 
 milvus_db = MilvusDB(logger=logger)
 
-LLM_Models = {}
 Embedding_Models = {}
 
 DBs = {}
