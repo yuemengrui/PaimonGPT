@@ -75,3 +75,5 @@ DBQA_PROMPT_TEMPLATE = """你是一个 SQL 专家，给你一个用户的问题�
 已知表结构信息如下：
 {table_info}
 """
+
+MERMAID_PROMPT_TEMPLATE = "{query}。要求: 必须使用标准mermaid格式输出，格式如下：```mermaid {{mermaid代码}}```。禁止在mermaid代码中出现注释、解释等文本，只返回mermaid代码，禁止返回任何描述性文本。"

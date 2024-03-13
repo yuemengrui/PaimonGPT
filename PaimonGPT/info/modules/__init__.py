@@ -1,6 +1,6 @@
 # *_*coding:utf-8 *_*
 from fastapi import FastAPI
-from . import chat, auth, myapp, knowledge_base, embedding, file_system, table, vl, model_register, health, dbqa, appstore
+from . import chat, auth, myapp, knowledge_base, embedding, file_system, table, vl, model_register, health, dbqa, appstore, chart
 
 
 def register_router(app: FastAPI):
@@ -16,3 +16,4 @@ def register_router(app: FastAPI):
     app.include_router(router=health.router, prefix="", tags=['health'])
     app.include_router(router=dbqa.router, prefix="", tags=['DB QA'])
     app.include_router(router=appstore.router, prefix="", tags=['App Store'])
+    app.include_router(router=chart.router, prefix="", tags=['Chart'])
