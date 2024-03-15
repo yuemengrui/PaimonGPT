@@ -23,7 +23,7 @@ router = APIRouter()
 async def support_llm_list(request: Request,
                            user_id=Depends(verify_token)
                            ):
-    resp = await requests.get(url=LLM_SERVER_PREFIX + LLM_SERVER_APIS['model_list'])
+    resp = requests.get(url=LLM_SERVER_PREFIX + LLM_SERVER_APIS['model_list'])
     return JSONResponse(resp.json())
 
 
@@ -141,7 +141,7 @@ async def count_token(request: Request,
                       ):
     logger.info(req.dict())
 
-    return JSONResponse(await servers_token_count(**req.dict()).json())
+    return JSONResponse(servers_token_count(**req.dict()).json())
 
 
 @router.api_route('/ai/llm/chat/simple', methods=['POST'], summary="Chat Simple")

@@ -10,5 +10,5 @@ router = APIRouter()
 
 @router.api_route(path='/ai/health', methods=['GET'], summary="health")
 @limiter.limit(API_LIMIT['base'])
-def health(request: Request):
+async def health(request: Request):
     return JSONResponse({'msg': 'I am very healthy'})
