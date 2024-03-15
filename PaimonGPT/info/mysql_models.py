@@ -1,7 +1,7 @@
 # *_*coding:utf-8 *_*
 # @Author : YueMengRui
 import datetime
-from sqlalchemy import Boolean, Column, Integer, String, DateTime, TEXT, JSON, BIGINT
+from sqlalchemy import Boolean, Column, Integer, String, DateTime, TEXT, JSON
 from .db_mysql import Base
 
 
@@ -46,7 +46,7 @@ class AppStore(Base, BaseModel):
     __tablename__ = 'appstore'
     __table_args__ = {'comment': '应用商城中的应用表'}
     id = Column(Integer, primary_key=True)
-    uid = Column(BIGINT, nullable=False, unique=True, comment="唯一id")
+    uid = Column(String(32), nullable=False, unique=True, comment="唯一id")
     name = Column(String(16), nullable=False, comment="应用名")
     description = Column(String(256), comment="应用描述")
     module_name = Column(String(64), nullable=False)
@@ -64,13 +64,13 @@ class App(Base, BaseModel):
     __tablename__ = 'app'
     __table_args__ = {'comment': '用户的应用表'}
     id = Column(Integer, primary_key=True)
-    uid = Column(BIGINT, nullable=False, unique=True, comment="唯一id")
+    uid = Column(String(32), nullable=False, unique=True, comment="唯一id")
     user_id = Column(Integer, nullable=False, comment="用户id")
     name = Column(String(32), nullable=False, comment="应用名称")
     llm_name = Column(String(32), comment="应用关联的大模型名")
     description = Column(String(256), comment="应用描述")
     is_appstore = Column(Boolean, default=False, comment='是否是商城应用')
-    appstore_uid = Column(BIGINT, comment='商城应用唯一id')
+    appstore_uid = Column(String(32), comment='商城应用唯一id')
     is_delete = Column(Boolean, default=False, comment="是否被删除，1表示已被删除，0表示未删除")
 
     def to_dict(self):
@@ -88,8 +88,8 @@ class App_KB(Base, BaseModel):
     __tablename__ = 'app_knowledgebase'
     __table_args__ = {'comment': '应用与知识库关联表'}
     id = Column(Integer, primary_key=True)
-    app_id = Column(BIGINT, nullable=False, comment="应用的唯一id")
-    kb_id = Column(BIGINT, nullable=False, comment="知识库的唯一id")
+    app_id = Column(String(32), nullable=False, comment="应用的唯一id")
+    kb_id = Column(String(32), nullable=False, comment="知识库的唯一id")
     kb_name = Column(String(32), nullable=False, comment="知识库名")
 
 
@@ -97,7 +97,7 @@ class ChatRecord(Base, BaseModel):
     __tablename__ = 'chat_record'
     __table_args__ = {'comment': '应用的对话表'}
     id = Column(Integer, primary_key=True)
-    app_id = Column(BIGINT, nullable=False, comment="应用的唯一id")
+    app_id = Column(String(32), nullable=False, comment="应用的唯一id")
     name = Column(String(16), comment="对话名")
     dynamic_name = Column(String(16))
     is_delete = Column(Boolean, default=False, comment="是否被删除，1表示已被删除，0表示未删除")
@@ -150,7 +150,7 @@ class KB(Base, BaseModel):
     __tablename__ = 'knowledgebase'
     __table_args__ = {'comment': '知识库表'}
     id = Column(Integer, primary_key=True)
-    uid = Column(BIGINT, nullable=False, unique=True, comment="唯一id")
+    uid = Column(String(32), nullable=False, unique=True, comment="唯一id")
     user_id = Column(Integer, nullable=False, comment="用户id")
     name = Column(String(32), nullable=False, comment="知识库名")
     description = Column(String(256), comment="知识库描述")
@@ -170,7 +170,7 @@ class KBFile(Base, BaseModel):
     __tablename__ = 'knowledgebase_file'
     __table_args__ = {'comment': '知识库中的文件表'}
     id = Column(Integer, primary_key=True)
-    kb_id = Column(BIGINT, nullable=False)
+    kb_id = Column(String(32), nullable=False)
     method_id = Column(Integer, nullable=False, comment='1:自动分段，2:QA拆分， 3:json导入')
     file_name = Column(String(128), nullable=False)
     file_hash = Column(String(64), nullable=False)

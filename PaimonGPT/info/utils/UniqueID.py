@@ -22,7 +22,7 @@ class SnowFlake:
         self.timestamp_left_shift = sequence_bits + worker_id_bits
         self.sequence_mask = -1 ^ (-1 << sequence_bits)
 
-    def guid(self, to_str: bool = False):
+    def guid(self, to_str: bool = True):
         timestamp = self._current_timestamp()
         if timestamp < self.last_timestamp:
             raise 'clock is moving backwards. Rejecting requests until %s' % self.last_timestamp
