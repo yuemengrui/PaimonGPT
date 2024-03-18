@@ -118,7 +118,7 @@ class ChatMessageRecord(Base, BaseModel):
     chat_id = Column(Integer, nullable=False, comment="对话表的id")
     role = Column(String(32), default='assistant', nullable=False, comment="角色")
     content = Column(TEXT, comment="消息的内容")
-    type = Column(String(16), default='text', comment='消息类型：text image')
+    type = Column(String(16), default='text', comment='消息类型：text image mermaid')
     url = Column(String(256))
     response = Column(JSON, default={})
     llm_name = Column(String(32))

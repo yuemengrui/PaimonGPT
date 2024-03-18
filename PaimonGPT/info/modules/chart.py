@@ -71,6 +71,8 @@ def llm_chat_chart(request: Request,
         new_message_assistant.content = resp['answer']
         new_message_assistant.llm_name = resp['model_name']
         new_message_assistant.response = resp
+        if len(resp['mermaid']) > 1:
+            new_message_assistant.type = 'mermaid'
 
         mysql_db.add(new_message_assistant)
 
